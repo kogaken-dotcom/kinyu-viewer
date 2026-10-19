@@ -1,0 +1,68 @@
+# 2時間ごとに、記事・動画・AI解説・金利・おすすめ5選を更新して、スマホ用サイトを作り直す
+#   - これまでのデータは「state」ブランチに置いておき、毎回取り出して続きから更新する
+#   - できあがったサイトは「site」ブランチに置く（Cloudflare Pages がこのブランチを公開する）
+# 必要な Secrets（GitHub の Settings → Secrets and variables → Actions）:
+#   SARASHINA_API_KEY … AI 解説を作る
+#   YOUTUBE_API_KEY   … YouTube の過去の動画を全部取る
+
+name: 更新（記事・動画・AI解説）
+
+on:
+  schedule:
+    - cron: "7 */2 * * *" # 2時間ごと（日本時間の奇数時台）
+  workflow_dispatch: {} # Actions の画面から手動でも動かせる
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: これまでのデータを取り出す
+        run: |
+          mkdir -p data
+          if git fetch --depth=1 origin state 2>/dev/null; then
+            git archive FETCH_HEAD | tar -x -C data
+            echo "前回までのデータを読み込みました"
+          else
+            echo "初回なので、データなしで始めます"
+          fi
+
+      - name: 記事・動画を集めて、AI 解説を作る
+        run: node scripts/update.js
+        env:
+          SARASHINA_API_KEY: ${{ secrets.SARASHINA_API_KEY }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          AI_MINUTES: "6"
+
+      - name: スマホ用サイトを作る
+        run: node scripts/build-site.js
+
+      - name: データとサイトを保存する
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REMOTE="https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          publish() { # $1 = フォルダ, $2 = ブランチ（毎回1つのコミットだけにして、履歴で容量が増えないようにする）
+            cd "$1"
+            git init -q
+            git checkout -q -b "$2"
+            git add -A
+            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "更新 $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push -q -f "$REMOTE" "$2"
+            cd - > /dev/null
+          }
+          publish data state
+          publish site site

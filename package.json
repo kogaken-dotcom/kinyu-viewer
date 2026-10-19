@@ -1,0 +1,19 @@
+{
+  "name": "newspicks-viewer",
+  "version": "1.0.0",
+  "description": "NewsPicks 金融ニュースビューア",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "update": "node --env-file-if-exists=.env scripts/update.js",
+    "build": "node scripts/build-site.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "NewsPicks 金融ビューア",
+  "short_name": "金融ビューア",
+  "description": "NewsPicks の金融ニュースと YouTube 動画を、ふくろんがやさしく解説します",
+  "lang": "ja",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f2fb",
+  "theme_color": "#5b3df5",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

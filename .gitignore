@@ -1,0 +1,11 @@
+# このフォルダにはほかのものもあるので、アプリに必要なファイルだけを GitHub に上げる
+/*
+!/.gitignore
+!/README.md
+!/package.json
+!/server.js
+!/lib/
+!/public/
+!/scripts/
+!/functions/
+!/.github/
