@@ -18,6 +18,7 @@ const AI_MINUTES = Number(process.env.AI_MINUTES || 4);
 (async () => {
   const started = Date.now();
   const notes = {};
+  let aiError = null; // AI がうまく動かなかったときの理由（data/state.json に残して、あとで確認できるようにする）
 
   for (const [id, c] of Object.entries(CATEGORIES)) {
     try {
@@ -42,11 +43,14 @@ const AI_MINUTES = Number(process.env.AI_MINUTES || 4);
   if (sarashina.hasKey()) {
     const r = await explainer.runUntil(Date.now() + AI_MINUTES * 60000);
     console.log(`AI 解説: ${r.made}件 作成（残り ${r.remaining}件）${r.lastError ? ` 最後のエラー: ${r.lastError}` : ""}`);
+    if (!r.made && r.lastError) aiError = r.lastError;
     try {
       const p = await getPicks();
-      console.log(`おすすめ5選: ${p.picks.length}件（${p.byAi ? "AI が選定" : "注目度順"}）`);
+      console.log(`おすすめ5選: ${p.picks.length}件（${p.byAi ? "AI が選定" : "注目度順"}）${p.error ? ` エラー: ${p.error}` : ""}`);
+      if (p.error) aiError ??= p.error;
     } catch (e) {
       console.error("おすすめ5選に失敗:", e.message);
+      aiError ??= e.message;
     }
   } else {
     console.log("SARASHINA_API_KEY がないため、AI 解説とおすすめ5選は作りません");
@@ -55,6 +59,7 @@ const AI_MINUTES = Number(process.env.AI_MINUTES || 4);
   const st = jsonfile.read("state.json", {});
   st.updatedAt = new Date().toISOString();
   st.notes = notes;
+  st.aiError = aiError;
   jsonfile.write("state.json", st);
   console.log(`完了（${Math.round((Date.now() - started) / 1000)}秒）`);
 })().catch((e) => {
