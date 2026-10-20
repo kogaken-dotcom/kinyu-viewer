@@ -74,19 +74,31 @@ jobs:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           REMOTE="https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          publish() { # $1 = フォルダ, $2 = ブランチ（毎回1つのコミットだけにして、履歴で容量が増えないようにする）
-            cd "$1"
-            git init -q
-            git checkout -q -b "$2"
-            git add -A
-            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "更新 $(date -u +%Y-%m-%dT%H:%MZ)"
-            git push -q -f "$REMOTE" "$2"
-            cd - > /dev/null
+          ROOT="$PWD"
+          commit_and_push() { # $1 = フォルダ, $2 = ブランチ（毎回1つのコミットだけにして、履歴で容量が増えないようにする）
+            (
+              cd "$1" &&
+              git init -q &&
+              git checkout -q -b "$2" &&
+              git add -A &&
+              git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "更新 $(date -u +%Y-%m-%dT%H:%MZ)" &&
+              git push -f "$REMOTE" "$2"
+            ) > "$ROOT/push-$2.log" 2>&1
           }
-          publish data state
+          status=0
+          commit_and_push data state || status=$?
+          # うまくいかなかったときに原因を確かめられるよう、結果を「debug」ブランチに残す
+          mkdir -p debug
+          cp -f push-state.log debug/ 2>/dev/null || true
+          cp -f data/deploy.log debug/ 2>/dev/null || true
+          echo "state の保存: 終了コード $status" > debug/summary.txt
+          du -sh data/* >> debug/summary.txt 2>&1 || true
+          commit_and_push debug debug || true
+          cat push-state.log
+          exit $status
 
       - name: サイトを置けなかったときは失敗として知らせる
-        if: steps.deploy.outcome == 'failure'
+        if: always() && steps.deploy.outcome == 'failure'
         run: |
-          echo "Cloudflare にサイトを置けませんでした（データは保存済み）。data/deploy.log を確認してください"
+          echo "Cloudflare にサイトを置けませんでした。debug ブランチの deploy.log を確認してください"
           exit 1
