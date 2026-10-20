@@ -57,14 +57,19 @@ jobs:
         run: node scripts/build-site.js
 
       - name: サイトを Cloudflare に置く
+        id: deploy
+        continue-on-error: true # 置けなくても、作った解説（データ）は必ず保存する
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then echo "CLOUDFLARE_API_TOKEN がないので、サイトは置きません"; exit 0; fi
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then echo "CLOUDFLARE_API_TOKEN がないので、サイトは置きません" | tee data/deploy.log; exit 0; fi
           cd site
-          npx --yes wrangler@3.80.0 pages deploy . --project-name kinyu-viewer --branch site --commit-dirty=true
+          # 結果を data/deploy.log に残す（うまくいかなかったときに原因を確かめるため）
+          set -o pipefail
+          npx --yes wrangler@3.80.0 pages deploy . --project-name kinyu-viewer --branch site --commit-dirty=true 2>&1 | grep -vE "Uploading|^\s*$" | tail -30 | tee ../data/deploy.log
 
       - name: データを保存する
+        if: always()
         env:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -79,3 +84,9 @@ jobs:
             cd - > /dev/null
           }
           publish data state
+
+      - name: サイトを置けなかったときは失敗として知らせる
+        if: steps.deploy.outcome == 'failure'
+        run: |
+          echo "Cloudflare にサイトを置けませんでした（データは保存済み）。data/deploy.log を確認してください"
+          exit 1
