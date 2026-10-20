@@ -1,0 +1,6 @@
+/data/*
+  Cache-Control: public, max-age=300
+/index.html
+  Cache-Control: no-cache
+/
+  Cache-Control: no-cache
