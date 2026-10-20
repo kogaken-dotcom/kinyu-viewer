@@ -1,9 +1,11 @@
 # 2時間ごとに、記事・動画・AI解説・金利・おすすめ5選を更新して、スマホ用サイトを作り直す
 #   - これまでのデータは「state」ブランチに置いておき、毎回取り出して続きから更新する
-#   - できあがったサイトは「site」ブランチに置く（Cloudflare Pages がこのブランチを公開する）
+#   - できあがったサイトは Cloudflare Pages（kinyu-viewer.pages.dev）に置く
+#   - AI（Sarashina）は GitHub のサーバーからの接続を断るので、Cloudflare の中継（/api/ai）を通して呼ぶ
 # 必要な Secrets（GitHub の Settings → Secrets and variables → Actions）:
-#   SARASHINA_API_KEY … AI 解説を作る
-#   YOUTUBE_API_KEY   … YouTube の過去の動画を全部取る
+#   SARASHINA_API_KEY    … AI 解説を作る
+#   YOUTUBE_API_KEY      … YouTube の過去の動画を全部取る
+#   CLOUDFLARE_API_TOKEN … サイトを Cloudflare に置く
 
 name: 更新（記事・動画・AI解説）
 
@@ -23,6 +25,9 @@ jobs:
   update:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      SITE_URL: https://kinyu-viewer.pages.dev
+      CLOUDFLARE_ACCOUNT_ID: 64977e125319b69323a8c9ff8da78202
     steps:
       - uses: actions/checkout@v4
 
@@ -45,12 +50,21 @@ jobs:
         env:
           SARASHINA_API_KEY: ${{ secrets.SARASHINA_API_KEY }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          AI_PROXY_URL: ${{ env.SITE_URL }}/api/ai
           AI_MINUTES: "6"
 
       - name: スマホ用サイトを作る
         run: node scripts/build-site.js
 
-      - name: データとサイトを保存する
+      - name: サイトを Cloudflare に置く
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then echo "CLOUDFLARE_API_TOKEN がないので、サイトは置きません"; exit 0; fi
+          cd site
+          npx --yes wrangler@3.80.0 pages deploy . --project-name kinyu-viewer --branch site --commit-dirty=true
+
+      - name: データを保存する
         env:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -65,4 +79,3 @@ jobs:
             cd - > /dev/null
           }
           publish data state
-          publish site site

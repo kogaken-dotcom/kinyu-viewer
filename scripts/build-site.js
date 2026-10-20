@@ -108,7 +108,7 @@ write("_headers", [
   "  Cache-Control: no-cache",
   "",
 ].join("\n"));
-for (const f of ["chat.js", "ask.js", "explain.js"]) copy(`functions/api/${f}`, `functions/api/${f}`);
+for (const f of ["chat.js", "ask.js", "explain.js", "ai.js"]) copy(`functions/api/${f}`, `functions/api/${f}`);
 for (const f of ["sarashina.js", "genres.js", "body.js", "ask.js", "chat-ai.js", "cf-util.js"]) copy(`lib/${f}`, `lib/${f}`);
 
 const size = (dir) => fs.readdirSync(dir, { withFileTypes: true }).reduce((s, d) => s + (d.isDirectory() ? size(path.join(dir, d.name)) : fs.statSync(path.join(dir, d.name)).size), 0);
