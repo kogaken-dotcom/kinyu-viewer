@@ -62,43 +62,31 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then echo "CLOUDFLARE_API_TOKEN がないので、サイトは置きません" | tee data/deploy.log; exit 0; fi
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then echo "::warning::CLOUDFLARE_API_TOKEN がないので、サイトは置きません"; exit 0; fi
           cd site
-          # 結果を data/deploy.log に残す（うまくいかなかったときに原因を確かめるため）
-          set -o pipefail
-          npx --yes wrangler@3.80.0 pages deploy . --project-name kinyu-viewer --branch site --commit-dirty=true 2>&1 | grep -vE "Uploading|^\s*$" | tail -30 | tee ../data/deploy.log
+          set +e
+          npx --yes wrangler@3.80.0 pages deploy . --project-name kinyu-viewer --branch site --commit-dirty=true > ../deploy.log 2>&1
+          code=$?
+          # 結果の要点を「注釈」として残す（Actions の画面の上に出る。長い英数字は伏せ字）
+          grep -E "Success|Deployment complete|ERROR|Error|error|code:|Authentication|permission" ../deploy.log \
+            | sed -E 's/[A-Za-z0-9_-]{24,}/***/g' | head -8 | while read -r line; do echo "::warning title=Cloudflare::$line"; done
+          exit $code
 
       - name: データを保存する
         if: always()
         env:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          REMOTE="https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          ROOT="$PWD"
-          commit_and_push() { # $1 = フォルダ, $2 = ブランチ（毎回1つのコミットだけにして、履歴で容量が増えないようにする）
-            (
-              cd "$1" &&
-              git init -q &&
-              git checkout -q -b "$2" &&
-              git add -A &&
-              git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "更新 $(date -u +%Y-%m-%dT%H:%MZ)" &&
-              git push -f "$REMOTE" "$2"
-            ) > "$ROOT/push-$2.log" 2>&1
-          }
-          status=0
-          commit_and_push data state || status=$?
-          # うまくいかなかったときに原因を確かめられるよう、結果を「debug」ブランチに残す
-          mkdir -p debug
-          cp -f push-state.log debug/ 2>/dev/null || true
-          cp -f data/deploy.log debug/ 2>/dev/null || true
-          echo "state の保存: 終了コード $status" > debug/summary.txt
-          du -sh data/* >> debug/summary.txt 2>&1 || true
-          commit_and_push debug debug || true
-          cat push-state.log
-          exit $status
-
-      - name: サイトを置けなかったときは失敗として知らせる
-        if: always() && steps.deploy.outcome == 'failure'
-        run: |
-          echo "Cloudflare にサイトを置けませんでした。debug ブランチの deploy.log を確認してください"
-          exit 1
+          cd data
+          git init -q
+          git checkout -q -b state
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "更新 $(date -u +%Y-%m-%dT%H:%MZ)"
+          set +e
+          # 毎回1つのコミットだけにして、履歴で容量が増えないようにする
+          git push -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" state > ../push.log 2>&1
+          code=$?
+          if [ $code -ne 0 ]; then
+            sed -E 's/[A-Za-z0-9_-]{24,}/***/g' ../push.log | tail -8 | while read -r line; do echo "::warning title=保存::$line"; done
+          fi
+          exit $code
