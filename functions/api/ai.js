@@ -29,6 +29,8 @@ export async function onRequest({ request, env }) {
     });
     return json({ text });
   } catch (e) {
-    return json({ error: e.message, retryAfter: e.retryAfter || null, retryable: !!e.retryable }, e.retryAfter ? 429 : 500);
+    // どこの Cloudflare のサーバー（空港コード。NRT/KIX=日本）で動いたかも返す（Sarashina は日本以外からの接続を断ることがあるため）
+    const where = request.cf?.colo ? `［${request.cf.colo}］` : "";
+    return json({ error: e.message + where, retryAfter: e.retryAfter || null, retryable: !!e.retryable }, e.retryAfter ? 429 : 500);
   }
 }
