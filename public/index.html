@@ -560,6 +560,19 @@
     .m-head h2 { font-size: 16px; }
   }
 
+  /* ===== 解説を読みやすく：1文ずつの段落・番号つきポイント・目次 ===== */
+  .blk .para p { margin: 0 0 .6em; } .blk .para p:last-child { margin-bottom: 0; }
+  .blk .pts { list-style: none; padding-left: 0; counter-reset: pt; }
+  .blk .pts li { counter-increment: pt; position: relative; padding-left: 34px; }
+  .blk .pts li::marker { content: none; }
+  .blk .pts li::before { content: counter(pt); position: absolute; left: 0; top: .2em; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--c); color: #fff; font-size: 13px; font-weight: 800; line-height: 24px; text-align: center; }
+  .sec-nav { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-top: -4px; }
+  .sec-nav::-webkit-scrollbar { display: none; }
+  .sec-nav button { flex: none; border: 0; border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 700; color: var(--text);
+    background: color-mix(in srgb, var(--c) 10%, var(--card)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 25%, transparent); }
+  .sec-nav button:active { transform: scale(.95); }
+
   /* ===== スマホ：記事を開いた画面を、画面いっぱいの読みやすい形にする ===== */
   @media (max-width: 560px) {
     /* 画面いっぱいに出す（100dvh はアドレスバーを除いた高さ。古いブラウザは 100% を使う） */
@@ -579,9 +592,15 @@
     .m-head:first-child h2 { padding-right: 40px; }
     .m-actions .btn { flex: 1; justify-content: center; padding: 10px 12px; font-size: 14px; }
     /* 本文：文字を少し大きく、行間を広く */
-    .m-body { padding: 18px 16px 8px; gap: 24px; }
+    .m-body { padding: 18px 16px 8px; gap: 16px; }
     .hero { font-size: 16.5px; line-height: 1.7; padding: 14px 14px 14px 42px; }
-    .blk h3 { font-size: 14px; margin-bottom: 8px; }
+    .blk h3 { font-size: 15px; margin-bottom: 10px; color: var(--text); font-weight: 800; }
+    /* 解説の項目を1つずつカードにして、区切りをはっきりさせる */
+    .blk.sec { padding: 14px 14px 16px; border-radius: 16px; background: color-mix(in srgb, var(--c) 4%, var(--card));
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 14%, var(--line)); }
+    .blk.sec .bubble { margin: 0 -4px; }
+    .bubble .copy { float: none; display: flex; margin: 0 0 8px auto; }
+    .sec-nav { margin: -8px -16px 0; padding: 0 16px; }
     .blk li, .blk .pts li, .blk .para, .bubble { font-size: 16px; line-height: 1.9; }
     .blk .pts li { margin-bottom: 10px; }
     .view { font-size: 15px; line-height: 1.85; }
@@ -1211,18 +1230,26 @@
     let body;
     if (e) {
       const list = (t) => `<ul>${sentences(t).map((s) => `<li>${esc(s)}</li>`).join("")}</ul>`;
+      // 長い文章は1文ずつ段落に分ける（スマホの細い画面で、文字のかたまりにならないように）
+      const paras = (t, cls = "") => `<div class="para ${cls}">${sentences(t).map((s) => `<p>${esc(s)}</p>`).join("")}</div>`;
+      // 見出しへ飛ぶボタン（解説が長いので、読みたいところへすぐ行けるように）
+      const secs = [
+        e.points?.length && ["pts", "📌 ポイント"], e.background && ["bg", "🧭 背景"], ["easy", "💡 かんたん"], ["life", "🏠 影響"],
+        e.views?.length && ["views", "💬 視点"], ["talk", "🗣 お客様へ"], e.terms.length && ["terms", "📖 ことば"],
+      ].filter(Boolean);
       body = `
         <div class="m-body${modalFresh ? " anim" : ""}" style="--c:${color(n.genre)}">
           <div class="hero">${esc(e.oneLine)}</div>
-          ${e.points?.length ? `<div class="blk"><h3>📌 記事のポイント</h3><ul class="pts">${e.points.map((p) => `<li>${esc(p)}</li>`).join("")}</ul></div>` : ""}
-          ${e.background ? `<div class="blk"><h3>🧭 背景・しくみ</h3><p class="para">${esc(e.background)}</p></div>` : ""}
-          <div class="blk"><h3>💡 かんたんに言うと</h3>${e.points?.length ? `<p class="para soft">${esc(e.simple)}</p>` : list(e.simple)}</div>
-          <div class="blk"><h3>🏠 くらし・お金への影響</h3>${list(e.impact)}</div>
-          ${e.views?.length ? `<div class="blk"><h3>💬 NewsPicks のコメントから見える視点 <small>（意見です）</small></h3>${e.views.map((v) => `<blockquote class="view">${esc(v)}</blockquote>`).join("")}</div>` : ""}
-          <div class="blk"><h3>🗣 お客様にはこう話す</h3>
+          <nav class="sec-nav" aria-label="解説の目次">${secs.map(([id, label]) => `<button data-jump="${id}">${label}</button>`).join("")}</nav>
+          ${e.points?.length ? `<div class="blk sec" id="sec-pts"><h3>📌 記事のポイント</h3><ol class="pts">${e.points.map((p) => `<li>${esc(p)}</li>`).join("")}</ol></div>` : ""}
+          ${e.background ? `<div class="blk sec" id="sec-bg"><h3>🧭 背景・しくみ</h3>${paras(e.background)}</div>` : ""}
+          <div class="blk sec" id="sec-easy"><h3>💡 かんたんに言うと</h3>${e.points?.length ? paras(e.simple, "soft") : list(e.simple)}</div>
+          <div class="blk sec" id="sec-life"><h3>🏠 くらし・お金への影響</h3>${list(e.impact)}</div>
+          ${e.views?.length ? `<div class="blk sec" id="sec-views"><h3>💬 NewsPicks のコメントから見える視点 <small>（意見です）</small></h3>${e.views.map((v) => `<blockquote class="view">${esc(v)}</blockquote>`).join("")}</div>` : ""}
+          <div class="blk sec" id="sec-talk"><h3>🗣 お客様にはこう話す</h3>
             <div class="bubble"><button class="btn copy" data-copy>コピー</button>${sentences(e.customerTalk).map((s) => `<p>${esc(s)}</p>`).join("")}</div>
           </div>
-          ${e.terms.length ? `<div class="blk"><h3>📖 ことばメモ</h3><div class="terms">${e.terms.map((t) => `<div class="term"><b>${esc(t.term)}</b>${esc(t.meaning)}</div>`).join("")}</div></div>` : ""}
+          ${e.terms.length ? `<div class="blk sec" id="sec-terms"><h3>📖 ことばメモ</h3><div class="terms">${e.terms.map((t) => `<div class="term"><b>${esc(t.term)}</b>${esc(t.meaning)}</div>`).join("")}</div></div>` : ""}
           ${askHtml(n)}
           ${relatedHtml(n)}
           <div class="blk"><h3>こんなお客様に役立つ</h3><div class="whos">${n.audiences.map((a) => `<span class="who">${audiences.find((x) => x.id === a)?.icon || ""} ${esc(audLabel(a))}</span>`).join("")}</div></div>
@@ -1589,6 +1616,12 @@
     const star = ev.target.closest("[data-star]");
     if (star) return toggleSave(star.dataset.star);
     if (ev.target.closest("[data-make]")) return makeExplanation(current);
+    const jump = ev.target.closest("[data-jump]");
+    if (jump) {
+      const sec = $("sec-" + jump.dataset.jump), box = $("modalScroll");
+      if (sec && box) box.scrollTo({ top: sec.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - 12, behavior: "smooth" });
+      return;
+    }
     const copy = ev.target.closest("[data-copy]");
     if (copy) {
       const text = findItem(current)?.explanation?.customerTalk || "";
