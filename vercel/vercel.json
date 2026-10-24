@@ -1,4 +1,0 @@
-{
-  "regions": ["hnd1"],
-  "functions": { "api/ai.js": { "maxDuration": 60 } }
-}

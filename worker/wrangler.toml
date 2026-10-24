@@ -1,0 +1,11 @@
+# AI の中継（Cloudflare Workers・東京で動かす）
+# Sarashina は日本の外からの接続を断る。GitHub Actions はアメリカにあるので、
+# ふつうの Cloudflare の関数だとアメリカで動いてしまう。placement で東京（AWS の東京リージョンの近く）に固定する。
+# 置き方: worker フォルダで `npx wrangler deploy`。キーは `npx wrangler secret put SARASHINA_API_KEY` で登録する。
+name = "kinyu-ai-relay"
+main = "ai.js"
+compatibility_date = "2025-01-01"
+workers_dev = true
+
+[placement]
+region = "aws:ap-northeast-1"

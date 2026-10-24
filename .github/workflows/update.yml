@@ -50,7 +50,8 @@ jobs:
         env:
           SARASHINA_API_KEY: ${{ secrets.SARASHINA_API_KEY }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
-          AI_PROXY_URL: ${{ env.SITE_URL }}/api/ai
+          # Sarashina は日本の外からの接続を断るので、東京に固定した Cloudflare Workers（worker フォルダ）を通す
+          AI_PROXY_URL: https://kinyu-ai-relay.kogaken0228.workers.dev
           AI_MINUTES: "6"
 
       - name: スマホ用サイトを作る

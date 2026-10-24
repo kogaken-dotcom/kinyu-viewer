@@ -38,6 +38,9 @@ npm start
    - フレームワーク: なし／ビルドコマンド: 空／ビルド出力ディレクトリ: `/`
 5. Cloudflare の Pages プロジェクトの **設定 → 変数とシークレット** に `SARASHINA_API_KEY` を（暗号化して）登録し、もう一度デプロイする
 6. `https://（プロジェクト名）.pages.dev` をスマホで開き、「ホーム画面に追加」
+7. AI の中継（`worker/`）を置く。Sarashina は日本の外からの接続を断るので、アメリカで動く GitHub Actions は、東京に固定したこの中継を通して AI を呼ぶ
+   - `worker` フォルダで `npx wrangler deploy` と `npx wrangler secret put SARASHINA_API_KEY`
+   - 出てきたアドレスを `.github/workflows/update.yml` の `AI_PROXY_URL` に書く
 
 ## 調整できること
 
