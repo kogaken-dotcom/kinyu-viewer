@@ -423,6 +423,9 @@
   .row-bot { display: flex; gap: 8px; align-items: flex-end; align-self: flex-start; max-width: 92%; }
   .row-bot .mascot { width: 30px; height: 30px; flex: none; }
   .row-bot .msg { max-width: none; }
+  /* 質問への答え（少し大きめに、読みやすく） */
+  .msg.answer { font-size: 15px; line-height: 1.85; }
+  .c-rel { font-size: 13px; font-weight: 700; color: var(--sub); margin: 2px 0 -2px 4px; }
   .msg.me, .c-form button, .ask-form button { background: linear-gradient(135deg, var(--brand1), var(--brand2)); }
 
   /* ===== ポップアップの深掘り質問 ===== */
@@ -688,11 +691,11 @@
 <div class="phone" id="phone" role="dialog" aria-label="スマホで見る"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <button class="totop" id="totop" aria-label="上に戻る">↑</button>
-<button class="chat-fab" id="chatFab" aria-label="コーチ・マイクに聞く"><span class="say">Hey！気になるニュースはある？一緒に探そうぜ！</span><span id="fabOwl"></span></button>
+<button class="chat-fab" id="chatFab" aria-label="コーチ・マイクに聞く"><span class="say">Hey！お金のこと、なんでも聞いてくれ！</span><span id="fabOwl"></span></button>
 <div class="chat" id="chat" role="dialog" aria-label="AIアシスタント">
   <div class="c-head">
     <span class="av" id="chatAv"></span>
-    <div><b>コーチ・マイク</b><small>元アメフト選手の「お金のコーチ」。記事や動画を探すぜ！</small></div>
+    <div><b>コーチ・マイク</b><small>元アメフト選手の「お金のコーチ」。質問に答えて、記事や動画も探すぜ！</small></div>
     <button class="x" id="chatClose" aria-label="閉じる">×</button>
   </div>
   <div class="c-log" id="chatLog"></div>
@@ -832,14 +835,16 @@
           } catch {}
           const all = await getData("data/search.json");
           const candidates = searchItems(all, query, kw.keywords, kw.kind);
-          if (!candidates.length) return fakeResponse({ reply: "ごめんなさい、合いそうな記事や動画が見つかりませんでした。別の言葉で聞いてみてください。", items: [] });
-          let r;
-          try {
-            r = await callFunction("/api/chat", { action: "choose", messages: history, candidates });
-          } catch {
-            r = { reply: "関係がありそうな記事や動画を探しました。", picks: candidates.slice(0, 5).map((_, index) => ({ index, reason: "" })) };
-          }
-          return fakeResponse({ reply: r.reply, items: r.picks.map((p) => ({ ...shape(candidates[p.index]), reason: p.reason })) });
+          // 質問への答えと、おすすめ選びを同時に頼む（待ち時間を短くする）
+          const [ans, r] = await Promise.all([
+            callFunction("/api/chat", { action: "answer", messages: history, candidates }).then((x) => x.answer || "").catch(() => ""),
+            candidates.length
+              ? callFunction("/api/chat", { action: "choose", messages: history, candidates })
+                .catch(() => ({ reply: "関係がありそうな記事や動画を探しました。", picks: candidates.slice(0, 5).map((_, index) => ({ index, reason: "" })) }))
+              : { reply: "", picks: [] },
+          ]);
+          if (!ans && !r.picks.length) return fakeResponse({ answer: "", reply: "ごめんなさい、合いそうな記事や動画が見つかりませんでした。別の言葉で聞いてみてください。", items: [] });
+          return fakeResponse({ answer: ans, reply: r.reply, items: r.picks.map((p) => ({ ...shape(candidates[p.index]), reason: p.reason })) });
         }
       }
       return fakeResponse({ error: "見つかりません" }, 404);
@@ -1381,7 +1386,7 @@
 
   // ===== AIチャット =====
   const chatHistory = []; // [{ role, content }]
-  const SUGGEST = ["老後のお金が不安", "最近の金利の動きを知りたい", "NISAは何から始める？", "中国経済を動画で知りたい", "初心者向けの投資の話"];
+  const SUGGEST = ["金利が上がると何が変わる？", "NISAは何から始める？", "円安って結局いいこと？", "老後のお金が不安", "最近の日銀の動きを知りたい"];
 
   function chatScroll() { const l = $("chatLog"); l.scrollTop = l.scrollHeight; }
 
@@ -1394,7 +1399,7 @@
     $("chat").classList.add("show");
     $("chatFab").classList.add("hidden");
     if (!$("chatLog").children.length) {
-      chatAdd(`<div class="row-bot">${mascot()}<div class="msg bot">Hey！コーチ・マイクだ！ 知りたいことや気になっていることを教えてくれ。ニュースとYouTube動画の中から、ぴったりのものを探してくるぜ。Let's go！</div></div>
+      chatAdd(`<div class="row-bot">${mascot()}<div class="msg bot">Hey！コーチ・マイクだ！ お金や経済のこと、なんでも質問してくれ。わかりやすく答えて、関係するニュースやYouTube動画も探してくるぜ。Let's go！</div></div>
         <div class="c-sugs">${SUGGEST.map((q) => `<button data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div>`);
     }
     setTimeout(() => $("chatInput").focus(), 300);
@@ -1421,17 +1426,22 @@
     document.querySelectorAll(".c-sugs").forEach((x) => x.remove());
     chatAdd(`<div class="msg me">${esc(text)}</div>`);
     chatHistory.push({ role: "user", content: text });
-    chatAdd(`<div class="row-bot" id="typing">${mascot("talk")}<div class="msg bot"><span class="dots"><span></span><span></span><span></span></span> マイクが全力で探してるぜ…</div></div>`);
+    chatAdd(`<div class="row-bot" id="typing">${mascot("talk")}<div class="msg bot"><span class="dots"><span></span><span></span><span></span></span> マイクが全力で考えてるぜ…</div></div>`);
     try {
       const res = await apiFetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: chatHistory }) });
       const data = await res.json();
       $("typing")?.remove();
       if (!res.ok) throw new Error(data.error || "うまく探せませんでした");
       for (const n of data.items) if (!chatItems.some((x) => sameId(x, n.id))) chatItems.push(n);
-      chatHistory.push({ role: "assistant", content: data.reply + (data.items.length ? "\n紹介したもの: " + data.items.map((n) => n.title).join(" / ") : "") });
-      chatAdd(`<div class="row-bot">${mascot()}<div class="msg bot">${esc(data.reply)}</div></div>` +
-        (data.items.length ? `<div class="c-results">${data.items.map(resultHtml).join("")}</div>` : ""));
-      if (data.items.length) chatAdd(`<div class="c-sugs"><button data-ask="もっと動画で知りたい">動画で知りたい</button><button data-ask="もっとやさしい内容がいい">もっとやさしく</button><button data-ask="最新のニュースだけ見たい">最新ニュースだけ</button></div>`);
+      const answer = data.answer || "";
+      chatHistory.push({ role: "assistant", content: [answer, data.reply].filter(Boolean).join("\n") + (data.items.length ? "\n紹介したもの: " + data.items.map((n) => n.title).join(" / ") : "") });
+      // まず質問への答え、そのあとに「関連する記事・動画」を出す
+      chatAdd((answer ? `<div class="row-bot">${mascot()}<div class="msg bot answer">${esc(answer)}</div></div>` : "") +
+        (data.items.length
+          ? `${answer ? `<div class="c-rel">📚 もっと知りたいなら、これを読んでくれ！</div>` : `<div class="row-bot">${mascot()}<div class="msg bot">${esc(data.reply)}</div></div>`}
+             <div class="c-results">${data.items.map(resultHtml).join("")}</div>`
+          : answer ? "" : `<div class="row-bot">${mascot()}<div class="msg bot">${esc(data.reply)}</div></div>`));
+      if (answer || data.items.length) chatAdd(`<div class="c-sugs"><button data-ask="もっとかんたんに説明して">もっとかんたんに</button><button data-ask="お客様にはどう説明すればいい？">お客様への説明</button><button data-ask="これについて動画で知りたい">動画で知りたい</button></div>`);
     } catch (e) {
       $("typing")?.remove();
       chatAdd(`<div class="row-bot">${mascot()}<div class="msg bot err">${esc(e.message)}</div></div>`);

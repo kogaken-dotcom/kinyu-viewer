@@ -144,7 +144,7 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  // AIチャット：知りたいことに合う記事・動画を探す
+  // AIチャット：質問に答えて、合う記事・動画を探す
   if (url.pathname === "/api/chat" && req.method === "POST") {
     try {
       const { messages } = await readJson(req);
@@ -152,6 +152,7 @@ const server = http.createServer(async (req, res) => {
       const ex = explanations.load();
       const savedMap = saved.all();
       return sendJson(res, 200, {
+        answer: r.answer || "",
         reply: r.reply,
         keywords: r.keywords || [],
         items: r.picks.map((p) => ({ ...decorate(p.n, ex, savedMap), reason: p.reason })),

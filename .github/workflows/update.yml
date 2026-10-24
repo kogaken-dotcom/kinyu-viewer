@@ -52,7 +52,7 @@ jobs:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           # Sarashina は日本の外からの接続を断るので、東京に固定した Cloudflare Workers（worker フォルダ）を通す
           AI_PROXY_URL: https://kinyu-ai-relay.kogaken0228.workers.dev
-          AI_MINUTES: "6"
+          AI_MINUTES: "8"
 
       - name: スマホ用サイトを作る
         run: node scripts/build-site.js
