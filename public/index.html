@@ -559,6 +559,41 @@
     .status { color: rgba(255,255,255,.85); }
     .m-head h2 { font-size: 16px; }
   }
+
+  /* ===== スマホ：記事を開いた画面を、画面いっぱいの読みやすい形にする ===== */
+  @media (max-width: 560px) {
+    /* 画面いっぱいに出す（100dvh はアドレスバーを除いた高さ。古いブラウザは 100% を使う） */
+    .modal { top: 0; bottom: 0; left: 0; width: 100%; height: 100%; height: 100dvh; max-height: none; border-radius: 0;
+      display: flex; flex-direction: column; transform: translateY(24px); }
+    .modal.show { transform: none; }
+    .m-scroll { flex: 1; min-height: 0; max-height: none; padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
+    .modal > .close { top: calc(10px + env(safe-area-inset-top)); right: 10px; width: 40px; height: 40px; font-size: 22px; }
+    .modal > .close:hover { transform: none; }
+    /* タイトルは上に貼りつけない（読む場所を広くする） */
+    .m-head { position: static; padding: calc(16px + env(safe-area-inset-top)) 16px 14px; backdrop-filter: none; }
+    .m-cover { height: calc(150px + env(safe-area-inset-top)); }
+    .m-cover + .m-head { position: relative; margin-top: 0; padding-top: 6px; }
+    .m-head .meta { padding-right: 46px; line-height: 1.6; }
+    .m-head h2 { font-size: 19px; line-height: 1.5; padding-right: 0; }
+    .m-cover + .m-head h2 { padding-right: 0; }
+    .m-head:first-child h2 { padding-right: 40px; }
+    .m-actions .btn { flex: 1; justify-content: center; padding: 10px 12px; font-size: 14px; }
+    /* 本文：文字を少し大きく、行間を広く */
+    .m-body { padding: 18px 16px 8px; gap: 24px; }
+    .hero { font-size: 16.5px; line-height: 1.7; padding: 14px 14px 14px 42px; }
+    .blk h3 { font-size: 14px; margin-bottom: 8px; }
+    .blk li, .blk .pts li, .blk .para, .bubble { font-size: 16px; line-height: 1.9; }
+    .blk .pts li { margin-bottom: 10px; }
+    .view { font-size: 15px; line-height: 1.85; }
+    .terms { grid-template-columns: 1fr; }
+    .term { font-size: 14px; } .term b { font-size: 15px; }
+    .ask { padding: 14px; }
+    .ask-log .q-me, .ask-log .a-bot div { font-size: 15px; }
+    .ask-sugs button { font-size: 14px; padding: 8px 12px; }
+    .ask-form button { padding: 0 18px; }
+    /* iPhone は 16px より小さい入力欄を押すと画面を勝手に拡大するので、16px にそろえる */
+    input, select, textarea { font-size: 16px !important; }
+  }
 </style>
 </head>
 <body>
