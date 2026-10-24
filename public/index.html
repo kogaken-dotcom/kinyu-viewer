@@ -702,6 +702,20 @@
   .c-sugs button, .ask-sugs button { border-color: color-mix(in srgb, var(--gold) 45%, var(--line)); color: var(--accent); background: var(--card); box-shadow: none; }
   .c-sugs button:hover, .ask-sugs button:hover { background: color-mix(in srgb, var(--gold) 10%, var(--card)); }
   .c-form input:focus, .ask-form input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 22%, transparent); }
+
+  /* ===== 絞り込み：「お客様のタイプ」「ジャンル」はボタンにして、タップで一覧を開く ===== */
+  .fbar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .fbtn { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; text-align: left; border: 0; border-radius: 12px; padding: 8px 12px;
+    background: var(--card); box-shadow: inset 0 0 0 1px var(--line); cursor: pointer; transition: box-shadow .2s, transform .15s; }
+  .fbtn:active { transform: scale(.98); }
+  .fbtn .fk { grid-column: 1; font-size: 11px; font-weight: 700; color: var(--muted); }
+  .fbtn .fv { grid-column: 1; font-size: 14px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fbtn .car { grid-column: 2; grid-row: 1 / span 2; align-self: center; color: var(--muted); transition: transform .25s; }
+  .fbtn.on { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--gold) 70%, var(--line)); }
+  .fbtn[aria-expanded="true"] { box-shadow: inset 0 0 0 2px var(--gold); }
+  .fbtn[aria-expanded="true"] .car { transform: rotate(180deg); }
+  .fpanel { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; border-radius: 14px; background: var(--card);
+    box-shadow: var(--shadow), inset 0 0 0 1px var(--line); animation: rise .25s cubic-bezier(.2,.7,.2,1) both; }
 </style>
 </head>
 <body>
@@ -927,6 +941,7 @@
   let audiences = [];
   let view = "news";     // "news" | "saved"
   let genre = "all";     // 選択中のジャンル
+  let openFilter = null; // 一覧を開いている絞り込み（"aud" か "genre"。閉じているときは null）
   let audience = "all";  // 選択中の対象（だれ向け）
   let warning = null;
   let ai = { enabled: false, queued: 0 };
@@ -1102,9 +1117,14 @@
     const gen = [{ id: "all", label: "すべて", icon: "✨", hint: "" }, ...genres.filter((g) => gCount(g.id))]
       .map((g) => `<button class="chip" data-genre="${g.id}" aria-pressed="${genre === g.id}" title="${esc(g.hint)}" style="--c:${g.id === "all" ? "var(--muted)" : color(g.id)}">
         <span class="ic">${g.icon}</span>${esc(g.label)}<span class="n">${g.id === "all" ? list.length : gCount(g.id)}</span></button>`).join("");
+    // ふだんは「お客様のタイプ」「ジャンル」の2つのボタンだけ。タップすると、その一覧が下に開く
+    const curAud = audiences.find((a) => a.id === audience) || { icon: "👥", label: "すべて" };
+    const curGen = genres.find((g) => g.id === genre) || { icon: "✨", label: "すべて" };
+    const fbtn = (key, title, cur, on) => `<button class="fbtn${on ? " on" : ""}" data-fopen="${key}" aria-expanded="${openFilter === key}">
+        <span class="fk">${title}</span><span class="fv">${cur.icon} ${esc(cur.label)}</span><span class="car" aria-hidden="true">▾</span></button>`;
     $("filters").innerHTML = `
-      <div class="frow"><span class="lbl">👤 お客様のタイプ</span><div class="chips">${aud}</div></div>
-      <div class="frow"><span class="lbl">🗂 ジャンル</span><div class="chips">${gen}</div></div>`;
+      <div class="fbar">${fbtn("aud", "お客様のタイプ", curAud, audience !== "all")}${fbtn("genre", "ジャンル", curGen, genre !== "all")}</div>
+      ${openFilter ? `<div class="fpanel">${openFilter === "aud" ? aud : gen}</div>` : ""}`;
   }
 
   function render() {
@@ -1645,8 +1665,14 @@
     window.scrollTo({ top: 0 });
   });
   $("filters").addEventListener("click", (ev) => {
+    const t = ev.target.closest("[data-fopen]");
+    if (t) {
+      openFilter = openFilter === t.dataset.fopen ? null : t.dataset.fopen;
+      return renderFilters(filtered());
+    }
     const b = ev.target.closest("button.chip");
     if (!b) return;
+    openFilter = null; // 選んだら一覧を閉じる
     if (b.dataset.aud) {
       audience = b.dataset.aud;
       try { localStorage.setItem("audience", audience); } catch {}
@@ -1655,6 +1681,11 @@
     animateNext = true;
     resetShown();
     render();
+  });
+  // 絞り込みの一覧の外をタップしたら閉じる
+  document.addEventListener("click", (ev) => {
+    // composedPath を使う（ボタンを押すと絞り込み欄が描き直されて、押した要素が画面から外れるため）
+    if (openFilter && !ev.composedPath().some((el) => el.id === "filters")) { openFilter = null; renderFilters(filtered()); }
   });
   // ランキング・あわせて読みたい・チャットからポップアップを開く
   document.addEventListener("click", (ev) => {
