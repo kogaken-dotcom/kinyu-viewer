@@ -1,14 +1,14 @@
 {
-  "name": "NewsPicks 金融ビューア",
-  "short_name": "金融ビューア",
-  "description": "NewsPicks の金融ニュースと YouTube 動画を、コーチ・マイクがわかりやすく解説します",
+  "name": "Finsight",
+  "short_name": "Finsight",
+  "description": "ニュースから、気づきを。金融ニュースと YouTube 動画を、コーチ・マイクがわかりやすく解説します",
   "lang": "ja",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f4f2fb",
-  "theme_color": "#5b3df5",
+  "background_color": "#f6f4ef",
+  "theme_color": "#0b1d33",
   "icons": [
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }

@@ -6,15 +6,15 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="/icons/icon-192.png">
-<meta name="theme-color" content="#5b3df5">
+<meta name="theme-color" content="#0b1d33">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="金融ビューア">
-<title>NewsPicks 金融ビューア</title>
+<meta name="apple-mobile-web-app-title" content="Finsight">
+<title>Finsight｜ニュースから、気づきを。</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700;900&family=Shippori+Mincho:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #f5f6f8; --card: #fff; --text: #1f2329; --sub: #4b5563; --muted: #8a919c; --line: #e6e8ec;
@@ -642,6 +642,66 @@
     .pk .tt { font-size: 13.5px; }
     .wrap { padding-left: 12px; padding-right: 12px; }
   }
+
+  /* =====================================================
+     Finsight テーマ：濃紺 × 金。落ち着いた品のある見た目（この下がいちばん優先される）
+     ===================================================== */
+  :root {
+    --bg: #f6f4ef; --card: #ffffff; --text: #14213d; --sub: #3d4657; --muted: #8a8f99; --line: #e6e1d6;
+    --accent: #1e3a5f; --accent-bg: #edf0f4; --brand1: #0f2742; --brand2: #1e3a5f; --brand3: #b08d57; --gold: #b08d57; --navy: #0f2742;
+    --star: #a87a2a; --star-bg: #f7f0e1;
+    --g-policy: #2f5d8a; --g-market: #9b3d3d; --g-invest: #3f7a5a; --g-world: #5d4f8a;
+    --g-finance: #2f7a85; --g-life: #a0782f; --g-company: #8a4f6b;
+    --shadow: 0 1px 2px rgba(20,33,61,.05), 0 8px 24px -14px rgba(20,33,61,.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0b1119; --card: #121a25; --text: #ebe7df; --sub: #c3c0b8; --muted: #8b8f97; --line: #243042;
+      --accent: #c9a96e; --accent-bg: #1c2633; --brand1: #0f2742; --brand2: #1e3a5f; --brand3: #c9a96e; --gold: #c9a96e;
+      --star: #d9b26a; --star-bg: #2b2416;
+      --g-policy: #7fa6cf; --g-market: #d08a8a; --g-invest: #8fbf9f; --g-world: #a99bd3;
+      --g-finance: #7fc0c8; --g-life: #d6b06a; --g-company: #cf9bb5;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 26px -14px rgba(0,0,0,.6); }
+  }
+  body { background: var(--bg); }
+  /* 見出しは明朝体で、新聞・経済誌のような落ち着きを出す */
+  h2, h3, .hero, .picks-h h2, .ask-h, .c-head b, .rk .t, .phone h3 { font-family: "Shippori Mincho", "Yu Mincho", serif; letter-spacing: .02em; }
+  section > h2, .picks-h h2 { font-weight: 800; }
+  .wordmark { font-family: "Cormorant Garamond", "Times New Roman", serif; font-size: 30px; font-weight: 700; letter-spacing: .02em; line-height: 1; }
+  .wordmark em { color: #d8b878; font-style: italic; font-weight: 600; }
+  .tagline { font-family: "Shippori Mincho", serif; font-size: 12px; letter-spacing: .12em; color: rgba(255,255,255,.78); margin-top: 3px; }
+
+  /* 上の帯：濃紺の無地に、細い金の線 */
+  .band { background: linear-gradient(165deg, #0b1d33 0%, #13294a 60%, #0f2742 100%); animation: none; border-bottom: 1px solid #b08d57; }
+  .band::before { display: none; }
+  .band::after { background: radial-gradient(700px 160px at 90% -30%, rgba(216,184,120,.16), transparent 70%); }
+  .logo { background: rgba(255,255,255,.08); box-shadow: inset 0 0 0 1px rgba(216,184,120,.45); }
+  .views { background: rgba(255,255,255,.08); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+  .views button[aria-pressed="true"] { background: #f6f4ef; color: #0f2742; }
+  .status .pulse { background: #d8b878; animation: none; box-shadow: none; }
+
+  /* ボタン・選択中の印：グラデーションをやめて、濃紺の無地に */
+  .chip[aria-pressed="true"], .btn.primary, .msg.me, .c-form button, .ask-form button, .pick-badge { background: var(--navy); color: #fff; box-shadow: none; }
+  @media (prefers-color-scheme: dark) {
+    .chip[aria-pressed="true"], .btn.primary, .msg.me, .c-form button, .ask-form button, .pick-badge { background: var(--gold); color: #10161f; }
+  }
+  .new { background: var(--gold); animation: none; }
+  .hot { background: #9b3d3d; }
+  .meter .bar i { background: linear-gradient(90deg, var(--navy), var(--gold)); }
+  .picks::before { height: 3px; background: linear-gradient(90deg, var(--navy), var(--gold), var(--navy)); }
+  .hero { background: color-mix(in srgb, var(--gold) 9%, var(--card)); box-shadow: inset 3px 0 0 var(--gold); border-radius: 12px; }
+  .hero::after { display: none; }
+  .ask { background: color-mix(in srgb, var(--navy) 4%, var(--card)); box-shadow: inset 0 0 0 1px var(--line); }
+  .sec-nav button { background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+
+  /* コーチ・マイクのチャット */
+  .chat-fab { background: radial-gradient(circle at 30% 25%, #fff, #f1ece1); box-shadow: 0 12px 26px -10px rgba(15,39,66,.55), inset 0 0 0 2px #d8b878; }
+  .c-head { background: linear-gradient(165deg, #0b1d33, #1e3a5f); animation: none; border-bottom: 1px solid #b08d57; }
+  .c-item:hover { border-color: var(--gold); box-shadow: 0 6px 16px -10px rgba(15,39,66,.4); }
+  .c-item .k { background: var(--navy); }
+  .c-item .k.v { background: #9b3d3d; }
+  .c-sugs button, .ask-sugs button { border-color: color-mix(in srgb, var(--gold) 45%, var(--line)); color: var(--accent); background: var(--card); box-shadow: none; }
+  .c-sugs button:hover, .ask-sugs button:hover { background: color-mix(in srgb, var(--gold) 10%, var(--card)); }
+  .c-form input:focus, .ask-form input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 22%, transparent); }
 </style>
 </head>
 <body>
@@ -651,7 +711,7 @@
     <div class="row top">
       <div class="brand">
         <span class="logo" id="logo" aria-hidden="true"></span>
-        <div><h1>NewsPicks 金融ビューア</h1><div class="today" id="today"></div></div>
+        <div><h1 class="wordmark">Fin<em>sight</em></h1><div class="tagline">ニュースから、気づきを。</div><div class="today" id="today"></div></div>
       </div>
       <div class="views" id="views">
         <button data-view="news" aria-pressed="true">ニュース</button>
