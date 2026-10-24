@@ -54,8 +54,11 @@ function compact(n) {
 
 const state = jsonfile.read("state.json", {});
 const all = new Map();
+const videoSummaries = Array.from({ length: BUCKETS }, () => ({})); // まだ解説がない動画の概要欄（その場で解説を作るときの材料）
 for (const id of Object.keys(CATEGORIES)) {
-  const items = archive.list(id).map(compact);
+  const raw = archive.list(id);
+  for (const n of raw) if (n.kind === "video" && !ex[n.id] && n.summary) videoSummaries[bucketOf(n.id)][n.id] = n.summary.slice(0, 600);
+  const items = raw.map(compact);
   for (const n of items) all.set(String(n.id), { ...n, cats: [...(all.get(String(n.id))?.cats || []), id] });
   write(`data/list-${id}.json`, { updatedAt: state.updatedAt || new Date().toISOString(), note: state.notes?.[id] || null, items });
 }
@@ -70,6 +73,8 @@ write("data/search.json", [...all.values()].map((n) => ({
 const buckets = Array.from({ length: BUCKETS }, () => ({}));
 for (const [id, e] of Object.entries(ex)) if (all.has(String(id))) buckets[bucketOf(id)][id] = e;
 buckets.forEach((b, i) => write(`data/ex/${i}.json`, b));
+// 動画の概要欄も、同じ番号のファイルに分けて置く（一覧には入れず、その場で解説・質問するときだけ読む）
+videoSummaries.forEach((b, i) => write(`data/vs/${i}.json`, b));
 
 // ---------- 金利・おすすめ・設定 ----------
 write("data/rates.json", jsonfile.read("rates.json", { jp: {}, us: {}, errors: ["まだ取得していません"] }));

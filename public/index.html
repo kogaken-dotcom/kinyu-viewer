@@ -814,6 +814,13 @@
     const shared = (await getData(`data/ex/${bucketOf(id, meta.buckets)}.json`))[id];
     return shared || store.get("localEx", {})[id] || null;
   }
+  // 動画の概要欄（一覧には入れていない）を足す。AI がタイトルだけで中身を想像しないように
+  async function withVideoSummary(n) {
+    if (!n || n.kind !== "video" || n.summary) return n;
+    const meta = await getData("data/meta.json");
+    const summary = (await getData(`data/vs/${bucketOf(n.id, meta.buckets)}.json`).catch(() => ({})))[n.id] || "";
+    return { ...n, summary };
+  }
   // 静的データの記事を、画面が使う形（PC 版の /api/news と同じ形）にそろえる
   function shape(n) {
     const saved = store.get("savedItems", {});
@@ -885,7 +892,7 @@
           return fakeResponse({ ok: true });
         }
         case "/api/explain": {
-          const n = findItem(body.id);
+          const n = await withVideoSummary(findItem(body.id));
           const e = await callFunction("/api/explain", { item: n });
           const localEx = store.get("localEx", {});
           localEx[String(body.id)] = e;
@@ -895,7 +902,7 @@
           return fakeResponse(e);
         }
         case "/api/ask": {
-          const n = findItem(body.id);
+          const n = await withVideoSummary(findItem(body.id));
           const e = n?.explanation?.partial ? await fullExplanation(String(body.id)) : n?.explanation;
           return fakeResponse(await callFunction("/api/ask", { item: n, explanation: e, messages: body.messages }));
         }
@@ -1056,7 +1063,7 @@
 
   function filtered() {
     const q = $("q").value.trim().toLowerCase();
-    let list = base().filter((n) => (audience === "all" || n.audiences.includes(audience)) && (!q ||
+    let list = base().filter((n) => (audience === "all" || n.audiences?.includes(audience)) && (!q ||
       (n.title + n.summary + n.publisher + (n.explanation?.oneLine || "")).toLowerCase().includes(q)));
     if ($("sort").value === "picks") list = [...list].sort((a, b) => score(b) - score(a));
     if ($("sort").value === "new") list = [...list].sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
@@ -1110,7 +1117,7 @@
 
   function renderFilters(list) {
     const src = base();
-    const audCount = (id) => src.filter((n) => id === "all" || n.audiences.includes(id)).length;
+    const audCount = (id) => src.filter((n) => id === "all" || n.audiences?.includes(id)).length;
     const gCount = (id) => list.filter((n) => n.genre === id).length;
     const aud = [{ id: "all", label: "すべてのお客様", icon: "👥", hint: "" }, ...audiences]
       .map((a) => `<button class="chip" data-aud="${a.id}" aria-pressed="${audience === a.id}" title="${esc(a.hint)}"><span class="ic">${a.icon}</span>${esc(a.label)}<span class="n">${audCount(a.id)}</span></button>`).join("");
@@ -1317,7 +1324,7 @@
         <div class="meta"><b>${esc(genreLabel(n.genre))}</b> ・ ${esc(n.publisher)} ・ ${esc(new Date(n.publishedAt).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }))}</div>
         <h2 id="m-title">${esc(n.title)}</h2>
         <div class="m-actions">
-          <a class="btn primary" href="${esc(n.url)}" target="_blank" rel="noopener">${n.kind === "video" ? "YouTubeで見る ↗" : "元の記事を読む ↗"}</a>
+          <a class="btn primary" href="${esc(n.url)}" target="_blank" rel="noopener">${n.kind !== "video" ? "元の記事を読む ↗" : String(n.id).startsWith("pv-") ? "PIVOTで見る ↗" : "YouTubeで見る ↗"}</a>
           <button class="btn" data-star="${n.id}" aria-pressed="${n.saved}">${n.saved ? "★ 保存済み" : "☆ 保存する"}</button>
         </div>
       </div>`;
@@ -1347,7 +1354,7 @@
           ${e.terms.length ? `<div class="blk sec" id="sec-terms"><h3>📖 ことばメモ</h3><div class="terms">${e.terms.map((t) => `<div class="term"><b>${esc(t.term)}</b>${esc(t.meaning)}</div>`).join("")}</div></div>` : ""}
           ${askHtml(n)}
           ${relatedHtml(n)}
-          <div class="blk"><h3>こんなお客様に役立つ</h3><div class="whos">${n.audiences.map((a) => `<span class="who">${audiences.find((x) => x.id === a)?.icon || ""} ${esc(audLabel(a))}</span>`).join("")}</div></div>
+          <div class="blk"><h3>こんなお客様に役立つ</h3><div class="whos">${(n.audiences || []).map((a) => `<span class="who">${audiences.find((x) => x.id === a)?.icon || ""} ${esc(audLabel(a))}</span>`).join("")}</div></div>
           <div class="note">※ ${esc(new Date(e.generatedAt).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }))} に${e.source === "sarashina" ? "Sarashina（AI）" : "Claude"}が、${n.kind === "video" ? "動画のタイトルと概要欄から作った解説です（動画の中身は見ていません）。くわしくは動画で確認してください"
   : e.basis === "body" ? `記事の本文${e.views?.length ? "と NewsPicks のコメント" : ""}を読んで作った解説です。大事な数字は元の記事でも確認してください`
   : "記事のタイトルと冒頭文だけから作った解説です（本文は取得できませんでした）。詳細は元の記事で確認してください"}。</div>
@@ -1382,7 +1389,8 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "解説の作成に失敗しました");
       making.delete(id);
-      for (const n of pool()) if (sameId(n, id)) Object.assign(n, { explanation: data, genre: data.genre, audiences: data.audiences });
+      // スマホ版の解説には audiences（お客様のタイプ）が入っていないので、あるものだけ書きかえる
+      for (const n of pool()) if (sameId(n, id)) Object.assign(n, { explanation: data, ...(data.genre && { genre: data.genre }), ...(Array.isArray(data.audiences) && { audiences: data.audiences }) });
     } catch (e) {
       making.set(id, e.message);
     }
@@ -1743,9 +1751,9 @@
   });
   $("shade").addEventListener("click", closeModal);
   document.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && current) closeModal(); });
-  // YouTube は全部の動画、ニュースは1か月分を最初に表示する
+  // 動画（YouTube・PIVOT）は全部の動画、ニュースは1か月分を最初に表示する
   $("cat").addEventListener("change", () => {
-    const yt = $("cat").value.startsWith("yt-");
+    const yt = $("cat").value.startsWith("yt-") || $("cat").value === "pivot";
     if (yt) $("period").value = "all";
     else if ($("period").value === "all") $("period").value = "31";
     genre = "all";
