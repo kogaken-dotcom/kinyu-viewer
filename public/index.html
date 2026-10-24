@@ -396,30 +396,30 @@
   .bubble { border-radius: 16px; background: color-mix(in srgb, var(--accent) 7%, var(--card)); box-shadow: inset 0 0 0 1px var(--line); }
   .btn.primary { background: linear-gradient(120deg, var(--brand1), var(--brand2)); }
 
-  /* ===== ふくろん（キャラクター） ===== */
-  .owl { display: block; overflow: visible; }
-  .owl .lid { transform-box: fill-box; transform-origin: center; transform: scaleY(0); animation: blink 5s infinite; }
-  .owl .wing-l { transform-box: fill-box; transform-origin: top right; }
-  .owl .wing-r { transform-box: fill-box; transform-origin: top left; }
-  .owl.talk .wing-l { animation: flapL .5s ease-in-out infinite; }
-  .owl.talk .wing-r { animation: flapR .5s ease-in-out infinite; }
-  .owl.bob { animation: bob 3s ease-in-out infinite; }
+  /* ===== コーチ・マイク（キャラクター） ===== */
+  .mascot { display: block; overflow: visible; }
+  .mascot .lid { transform-box: fill-box; transform-origin: center; transform: scaleY(0); animation: blink 5s infinite; }
+  .mascot .wing-l { transform-box: fill-box; transform-origin: bottom right; } /* 腕：肩を軸にガッツポーズ */
+  .mascot .wing-r { transform-box: fill-box; transform-origin: bottom left; }
+  .mascot.talk .wing-l { animation: flapL .5s ease-in-out infinite; }
+  .mascot.talk .wing-r { animation: flapR .5s ease-in-out infinite; }
+  .mascot.bob { animation: bob 3s ease-in-out infinite; }
   @keyframes blink { 0%, 93%, 100% { transform: scaleY(0); } 95.5% { transform: scaleY(1); } }
-  @keyframes flapL { 50% { transform: rotate(16deg); } }
-  @keyframes flapR { 50% { transform: rotate(-16deg); } }
+  @keyframes flapL { 50% { transform: rotate(-22deg); } }
+  @keyframes flapR { 50% { transform: rotate(22deg); } }
 
   .chat-fab { padding: 0; width: 72px; height: 72px; border-radius: 50%; background: radial-gradient(circle at 30% 25%, #fff, #efe9ff); justify-content: center;
     box-shadow: 0 14px 30px -10px rgba(109,74,255,.65), inset 0 0 0 3px #fff; }
-  .chat-fab .owl { width: 58px; height: 58px; }
+  .chat-fab .mascot { width: 58px; height: 58px; }
   .chat-fab .say { position: absolute; right: 80px; bottom: 18px; white-space: nowrap; padding: 8px 12px; border-radius: 14px 14px 4px 14px; font-size: 13px; font-weight: 700;
     color: var(--text); background: var(--card); box-shadow: var(--shadow); animation: say 9s ease-in-out infinite; pointer-events: none; }
   @keyframes say { 0%, 8% { opacity: 0; transform: translateY(6px) scale(.9); } 12%, 55% { opacity: 1; transform: none; } 60%, 100% { opacity: 0; transform: translateY(6px) scale(.9); } }
   .totop { bottom: 102px; }
   .c-head { background: linear-gradient(120deg, #2a1b6e, #6d4aff, #2f7bff); }
   .c-head .av { width: 46px; height: 46px; background: rgba(255,255,255,.95); padding: 3px; }
-  .c-head .av .owl { width: 100%; height: 100%; }
+  .c-head .av .mascot { width: 100%; height: 100%; }
   .row-bot { display: flex; gap: 8px; align-items: flex-end; align-self: flex-start; max-width: 92%; }
-  .row-bot .owl { width: 30px; height: 30px; flex: none; }
+  .row-bot .mascot { width: 30px; height: 30px; flex: none; }
   .row-bot .msg { max-width: none; }
   .msg.me, .c-form button, .ask-form button { background: linear-gradient(135deg, var(--brand1), var(--brand2)); }
 
@@ -427,14 +427,14 @@
   .ask { border-radius: 20px; padding: 16px; background: linear-gradient(160deg, color-mix(in srgb, var(--brand1) 9%, var(--card)), color-mix(in srgb, var(--brand3) 7%, var(--card)));
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand1) 18%, var(--line)); display: grid; gap: 12px; }
   .ask-top { display: flex; gap: 10px; align-items: center; }
-  .ask-top .owl { width: 52px; height: 52px; flex: none; }
+  .ask-top .mascot { width: 52px; height: 52px; flex: none; }
   .ask-h { font-size: 16px; font-weight: 900; margin: 0; }
   .ask-top p { margin: 2px 0 0; font-size: 13px; color: var(--sub); }
   .ask-log { display: grid; gap: 10px; }
   .ask-log .q-me { justify-self: end; max-width: 85%; padding: 8px 12px; border-radius: 14px 14px 4px 14px; color: #fff; font-size: 14px;
     background: linear-gradient(135deg, var(--brand1), var(--brand2)); animation: rise .3s both; }
   .ask-log .a-bot { display: flex; gap: 8px; align-items: flex-start; animation: rise .35s both; }
-  .ask-log .a-bot .owl { width: 30px; height: 30px; flex: none; margin-top: 2px; }
+  .ask-log .a-bot .mascot { width: 30px; height: 30px; flex: none; margin-top: 2px; }
   .ask-log .a-bot div { padding: 10px 13px; border-radius: 14px 14px 14px 4px; background: var(--card); box-shadow: var(--shadow); font-size: 14px; line-height: 1.8; white-space: pre-wrap; }
   .ask-log .a-bot.err div { color: #d33; }
   .ask-sugs { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -608,11 +608,11 @@
 <div class="phone" id="phone" role="dialog" aria-label="スマホで見る"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <button class="totop" id="totop" aria-label="上に戻る">↑</button>
-<button class="chat-fab" id="chatFab" aria-label="ふくろんに聞く"><span class="say">気になることある？ふくろんが探すホー！</span><span id="fabOwl"></span></button>
+<button class="chat-fab" id="chatFab" aria-label="コーチ・マイクに聞く"><span class="say">Hey！気になるニュースはある？一緒に探そうぜ！</span><span id="fabOwl"></span></button>
 <div class="chat" id="chat" role="dialog" aria-label="AIアシスタント">
   <div class="c-head">
     <span class="av" id="chatAv"></span>
-    <div><b>ふくろん</b><small>不苦労（ふくろう）の金融ナビ。記事や動画を探すホー</small></div>
+    <div><b>コーチ・マイク</b><small>元アメフト選手の「お金のコーチ」。記事や動画を探すぜ！</small></div>
     <button class="x" id="chatClose" aria-label="閉じる">×</button>
   </div>
   <div class="c-log" id="chatLog"></div>
@@ -792,33 +792,33 @@
   const making = new Map(); // 記事ID → "loading" | エラーメッセージ
   try { audience = localStorage.getItem("audience") || "all"; } catch {}
 
-  // ===== ふくろん（オリジナルキャラクター）：不苦労＝お金の苦労がないように、というフクロウ =====
-  function owl(cls = "") {
-    return `<svg class="owl ${cls}" viewBox="0 0 64 64" aria-hidden="true">
-      <defs>
-        <linearGradient id="owlBody" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b6bff"/><stop offset="1" stop-color="#3b6dff"/></linearGradient>
-        <linearGradient id="owlWing" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6d4aff"/><stop offset="1" stop-color="#2f57e8"/></linearGradient>
-      </defs>
-      <path d="M15 20 L19 6 L27 15 Z" fill="url(#owlBody)"/>
-      <path d="M49 20 L45 6 L37 15 Z" fill="url(#owlBody)"/>
-      <ellipse cx="32" cy="36" rx="21" ry="23" fill="url(#owlBody)"/>
-      <path class="wing-l" d="M12 34 Q6 44 13 54 Q17 46 16 36 Z" fill="url(#owlWing)"/>
-      <path class="wing-r" d="M52 34 Q58 44 51 54 Q47 46 48 36 Z" fill="url(#owlWing)"/>
-      <ellipse cx="32" cy="45" rx="12.5" ry="11.5" fill="#f3efff"/>
-      <path d="M26 43 q2 2 4 0 M34 43 q2 2 4 0 M30 48 q2 2 4 0" stroke="#c9bcff" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-      <circle cx="23.5" cy="29" r="8" fill="#fff"/><circle cx="40.5" cy="29" r="8" fill="#fff"/>
-      <circle cx="24.5" cy="30" r="3.8" fill="#1d1b2f"/><circle cx="39.5" cy="30" r="3.8" fill="#1d1b2f"/>
-      <circle cx="25.8" cy="28.6" r="1.3" fill="#fff"/><circle cx="40.8" cy="28.6" r="1.3" fill="#fff"/>
-      <ellipse class="lid" cx="23.5" cy="29" rx="8.2" ry="8.2" fill="url(#owlBody)"/>
-      <ellipse class="lid" cx="40.5" cy="29" rx="8.2" ry="8.2" fill="url(#owlBody)"/>
-      <circle cx="23.5" cy="29" r="9" fill="none" stroke="#ffc94d" stroke-width="2"/>
-      <circle cx="40.5" cy="29" r="9" fill="none" stroke="#ffc94d" stroke-width="2"/>
-      <path d="M32.5 29 h-1" stroke="#ffc94d" stroke-width="2"/>
-      <path d="M29.5 35 L34.5 35 L32 39.5 Z" fill="#ff9f43"/>
-      <ellipse cx="17" cy="38" rx="2.6" ry="1.6" fill="#ff8fb1" opacity=".55"/><ellipse cx="47" cy="38" rx="2.6" ry="1.6" fill="#ff8fb1" opacity=".55"/>
-      <path d="M26 58 l-2 3 M28 58 l0 3.5 M30 58 l2 3 M34 58 l-2 3 M36 58 l0 3.5 M38 58 l2 3" stroke="#ff9f43" stroke-width="1.8" stroke-linecap="round"/>
+  // ===== コーチ・マイク（オリジナルキャラクター）：テキサス出身の元アメフト選手で、今は「お金のコーチ」 =====
+  // 金髪にヘッドバンド、ホイッスルを首にかけた体育会系。考え中はガッツポーズ（.talk）、ときどきまばたきする
+  function mascot(cls = "") {
+    return `<svg class="mascot ${cls}" viewBox="0 0 64 64" aria-hidden="true">
+      <g class="wing-l"><path d="M14 56 L7 41" stroke="#c8102e" stroke-width="5.5" stroke-linecap="round"/><circle cx="6.5" cy="38.5" r="4.2" fill="#f2c29b"/></g>
+      <g class="wing-r"><path d="M50 56 L57 41" stroke="#c8102e" stroke-width="5.5" stroke-linecap="round"/><circle cx="57.5" cy="38.5" r="4.2" fill="#f2c29b"/></g>
+      <path d="M11 64 Q12 50 32 49.5 Q52 50 53 64 Z" fill="#c8102e"/>
+      <path d="M26.5 49.8 L32 56.5 L37.5 49.8 Z" fill="#fff"/>
+      <path d="M17 58 h7 M40 58 h7" stroke="#fff" stroke-width="1.6"/>
+      <path d="M25 49 Q32 55 39 49" stroke="#facc15" stroke-width="1.3" fill="none"/>
+      <rect x="35.5" y="51" width="6.5" height="3.6" rx="1.6" fill="#cbd5e1" stroke="#94a3b8" stroke-width=".6"/>
+      <circle cx="14.6" cy="31" r="3.4" fill="#f2c29b"/><circle cx="49.4" cy="31" r="3.4" fill="#f2c29b"/>
+      <ellipse cx="32" cy="30.5" rx="17" ry="18" fill="#f8d3b0"/>
+      <path d="M15.2 25 Q14 8 32 7 Q50 8 48.8 25 L46.5 15.5 L42.5 21 L39 12.5 L35 19.5 L31.5 11.5 L27.5 19.5 L24 13 L20.5 20.5 L18 16 Z" fill="#f6c343"/>
+      <rect x="14.6" y="19.2" width="34.8" height="5.6" rx="2.8" fill="#1d4ed8"/>
+      <path d="M32 19.9 l1.05 2.15 2.35.33-1.7 1.65.4 2.35L32 25.3l-2.1 1.13.4-2.35-1.7-1.65 2.35-.33Z" fill="#fff" transform="translate(0 -1.2) scale(1)"/>
+      <path d="M20.5 27.3 L28 25.6 M43.5 27.3 L36 25.6" stroke="#b7862b" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="25" cy="31" rx="2.5" ry="3" fill="#1d1b2f"/><ellipse cx="39" cy="31" rx="2.5" ry="3" fill="#1d1b2f"/>
+      <circle cx="25.9" cy="29.9" r=".9" fill="#fff"/><circle cx="39.9" cy="29.9" r=".9" fill="#fff"/>
+      <ellipse class="lid" cx="25" cy="31" rx="3" ry="3.5" fill="#f8d3b0"/><ellipse class="lid" cx="39" cy="31" rx="3" ry="3.5" fill="#f8d3b0"/>
+      <ellipse cx="19.8" cy="37" rx="2.6" ry="1.5" fill="#ff8fa3" opacity=".5"/><ellipse cx="44.2" cy="37" rx="2.6" ry="1.5" fill="#ff8fa3" opacity=".5"/>
+      <path d="M23.5 37.2 Q32 47.5 40.5 37.2 Z" fill="#7a1f2b"/>
+      <path d="M24.8 37.6 Q32 40.4 39.2 37.6 L38.6 39.3 Q32 41.6 25.4 39.3 Z" fill="#fff"/>
+      <path d="M28.5 43.3 Q32 45.2 35.5 43.3" stroke="#ff8fa3" stroke-width="1.6" fill="none" stroke-linecap="round"/>
     </svg>`;
   }
+
 
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const color = (id) => `var(--g-${id})`;
@@ -1022,13 +1022,13 @@
 
   // 今日のおすすめ5選（カテゴリに関係なく、ニュースと動画の中から AI が選ぶ）
   function picksHtml() {
-    if (!picks) return `<div class="picks"><div class="picks-h"><h2>📌 今日のおすすめ5選</h2><small>ふくろんが選んでいます…</small></div>
+    if (!picks) return `<div class="picks"><div class="picks-h"><h2>📌 今日のおすすめ5選</h2><small>コーチ・マイクが選んでいます…</small></div>
       <div class="picks-grid">${'<div class="sk-row" style="grid-column:1/-1;height:130px"></div>' + '<div class="sk-row"></div>'.repeat(4)}</div></div>`;
     if (!picks.items.length) return "";
     const d = new Date(picks.createdAt);
     return `<div class="picks">
       <div class="picks-h"><h2>📌 今日のおすすめ5選</h2>
-        <small>${d.getMonth() + 1}月${d.getDate()}日 ${d.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })} に${picks.byAi ? "ふくろん（AI）が、今日とくに読んでおきたいものを選びました" : "注目度の高い順に選びました"}</small></div>
+        <small>${d.getMonth() + 1}月${d.getDate()}日 ${d.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })} に${picks.byAi ? "コーチ・マイク（AI）が、今日とくに読んでおきたいものを選びました" : "注目度の高い順に選びました"}</small></div>
       <div class="picks-grid">${picks.items.map((n, i) => `
         <button class="pk${i === 0 ? " first" : ""}" data-open="${n.id}" style="--c:${color(n.genre)}">
           <span class="num">${i + 1}</span>
@@ -1087,14 +1087,14 @@
     const last = [...thread].reverse().find((m) => m.role === "assistant");
     const sugs = thread.length ? last?.followups || [] : ASK_STARTERS;
     return `<div class="ask">
-      <div class="ask-top">${owl("bob")}<div><h3 class="ask-h">ふくろんに深掘り質問</h3><p>この${n.kind === "video" ? "動画" : "記事"}について、気になることを聞いてホー！</p></div></div>
+      <div class="ask-top">${mascot("bob")}<div><h3 class="ask-h">コーチ・マイクに深掘り質問</h3><p>この${n.kind === "video" ? "動画" : "記事"}について、なんでも聞いてくれ！ナイス質問、待ってるぜ！</p></div></div>
       ${thread.length ? `<div class="ask-log">${thread.map((m) => m.role === "user"
         ? `<div class="q-me">${esc(m.content)}</div>`
-        : `<div class="a-bot${m.error ? " err" : ""}">${owl()}<div>${esc(m.content)}</div></div>`).join("")}
-        ${askBusy ? `<div class="a-bot">${owl("talk")}<div><span class="dots"><span></span><span></span><span></span></span> 考えているホー…</div></div>` : ""}</div>` : ""}
+        : `<div class="a-bot${m.error ? " err" : ""}">${mascot()}<div>${esc(m.content)}</div></div>`).join("")}
+        ${askBusy ? `<div class="a-bot">${mascot("talk")}<div><span class="dots"><span></span><span></span><span></span></span> 考え中…ちょっと待ってくれ！</div></div>` : ""}</div>` : ""}
       ${sugs.length && !askBusy ? `<div class="ask-sugs">${sugs.map((q) => `<button data-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>` : ""}
       <form class="ask-form" data-askform><input id="askInput" placeholder="例：なぜ今このニュースが大事なの？" maxlength="200" autocomplete="off"><button ${askBusy ? "disabled" : ""}>聞く</button></form>
-      <div class="ask-note">※ ふくろんは記事のタイトル・冒頭（動画は概要欄）と解説だけを読んで答えます。大事な数字は元の${n.kind === "video" ? "動画" : "記事"}で確かめてね。</div>
+      <div class="ask-note">※ マイクは記事のタイトル・冒頭（動画は概要欄）と解説だけを読んで答えます。大事な数字は元の${n.kind === "video" ? "動画" : "記事"}で確かめてね。</div>
     </div>`;
   }
 
@@ -1306,7 +1306,7 @@
     $("chat").classList.add("show");
     $("chatFab").classList.add("hidden");
     if (!$("chatLog").children.length) {
-      chatAdd(`<div class="row-bot">${owl()}<div class="msg bot">こんにちは、ふくろんだホー！ 知りたいことや気になっていることを教えてね。ニュースとYouTube動画の中から、ぴったりのものを探すよ。</div></div>
+      chatAdd(`<div class="row-bot">${mascot()}<div class="msg bot">Hey！コーチ・マイクだ！ 知りたいことや気になっていることを教えてくれ。ニュースとYouTube動画の中から、ぴったりのものを探してくるぜ。Let's go！</div></div>
         <div class="c-sugs">${SUGGEST.map((q) => `<button data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div>`);
     }
     setTimeout(() => $("chatInput").focus(), 300);
@@ -1333,7 +1333,7 @@
     document.querySelectorAll(".c-sugs").forEach((x) => x.remove());
     chatAdd(`<div class="msg me">${esc(text)}</div>`);
     chatHistory.push({ role: "user", content: text });
-    chatAdd(`<div class="row-bot" id="typing">${owl("talk")}<div class="msg bot"><span class="dots"><span></span><span></span><span></span></span> ふくろんが探しているホー…</div></div>`);
+    chatAdd(`<div class="row-bot" id="typing">${mascot("talk")}<div class="msg bot"><span class="dots"><span></span><span></span><span></span></span> マイクが全力で探してるぜ…</div></div>`);
     try {
       const res = await apiFetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: chatHistory }) });
       const data = await res.json();
@@ -1341,12 +1341,12 @@
       if (!res.ok) throw new Error(data.error || "うまく探せませんでした");
       for (const n of data.items) if (!chatItems.some((x) => sameId(x, n.id))) chatItems.push(n);
       chatHistory.push({ role: "assistant", content: data.reply + (data.items.length ? "\n紹介したもの: " + data.items.map((n) => n.title).join(" / ") : "") });
-      chatAdd(`<div class="row-bot">${owl()}<div class="msg bot">${esc(data.reply)}</div></div>` +
+      chatAdd(`<div class="row-bot">${mascot()}<div class="msg bot">${esc(data.reply)}</div></div>` +
         (data.items.length ? `<div class="c-results">${data.items.map(resultHtml).join("")}</div>` : ""));
       if (data.items.length) chatAdd(`<div class="c-sugs"><button data-ask="もっと動画で知りたい">動画で知りたい</button><button data-ask="もっとやさしい内容がいい">もっとやさしく</button><button data-ask="最新のニュースだけ見たい">最新ニュースだけ</button></div>`);
     } catch (e) {
       $("typing")?.remove();
-      chatAdd(`<div class="row-bot">${owl()}<div class="msg bot err">${esc(e.message)}</div></div>`);
+      chatAdd(`<div class="row-bot">${mascot()}<div class="msg bot err">${esc(e.message)}</div></div>`);
       chatHistory.pop();
     } finally {
       $("chatSend").disabled = false;
@@ -1459,7 +1459,7 @@
       <div class="url">${esc(url)}</div>
       <ol>
         <li>開いたら、共有ボタン（iPhone）またはメニュー（Android）から「<b>ホーム画面に追加</b>」</li>
-        <li>ホーム画面のふくろんのアイコンから、アプリのように開けます</li>
+        <li>ホーム画面のマイクのアイコンから、アプリのように開けます</li>
         <li>見られるのは、このPCでアプリが起動しているときだけです</li>
       </ol>`
       : `<button class="x" data-phone-close aria-label="閉じる">×</button><h3>📱 スマホで見る</h3><p>Wi-Fi のアドレスが見つかりませんでした。PCが Wi-Fi につながっているか確認してください。</p>`;
@@ -1559,9 +1559,9 @@
   });
   ["sort", "period"].forEach((id) => $(id).addEventListener("input", () => { animateNext = true; resetShown(); render(); }));
   $("q").addEventListener("input", () => { resetShown(); render(); });
-  $("logo").innerHTML = owl("bob");
-  $("fabOwl").innerHTML = owl("bob");
-  $("chatAv").innerHTML = owl();
+  $("logo").innerHTML = mascot("bob");
+  $("fabOwl").innerHTML = mascot("bob");
+  $("chatAv").innerHTML = mascot();
   // 今日の日付と「上に戻る」ボタン
   $("today").textContent = new Date().toLocaleDateString("ja-JP", { month: "long", day: "numeric", weekday: "short" }) + "のニュース";
   window.addEventListener("scroll", () => $("totop").classList.toggle("show", window.scrollY > 600), { passive: true });

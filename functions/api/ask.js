@@ -1,4 +1,4 @@
-// ふくろんに深掘り質問（Cloudflare Pages Functions）
+// コーチ・マイクに深掘り質問（Cloudflare Pages Functions）
 //   { item, explanation, messages } → { answer, followups }
 // ニュースは、その場で NewsPicks から本文を読んで答える（本文はどこにも保存しない）
 

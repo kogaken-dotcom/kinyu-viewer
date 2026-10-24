@@ -1,7 +1,7 @@
 // スマホ用の公開サイトを site/ フォルダに作る（Cloudflare Pages に置く）
 //   - 画面（index.html）は PC 版と同じファイル。window.APP_MODE = "static" を入れて、データを静的ファイルから読むようにする
 //   - data/ … 一覧・解説・金利・おすすめを JSON にしたもの
-//   - functions/ … ふくろんのチャット・深掘り質問・その場の解説（Cloudflare Pages Functions）
+//   - functions/ … コーチ・マイクのチャット・深掘り質問・その場の解説（Cloudflare Pages Functions）
 //   - lib/ … functions が使う AI の部分（PC 版と同じファイル）
 
 const fs = require("fs");

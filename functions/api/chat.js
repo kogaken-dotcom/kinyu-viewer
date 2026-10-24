@@ -1,4 +1,4 @@
-// ふくろんのチャット（Cloudflare Pages Functions）
+// コーチ・マイクのチャット（Cloudflare Pages Functions）
 //   { action: "keywords", messages }            → 検索キーワード
 //   { action: "choose", messages, candidates }  → 候補から選んだものと返事
 // 記事の検索そのものは、スマホの画面側で行う（サーバーの処理を軽くするため）

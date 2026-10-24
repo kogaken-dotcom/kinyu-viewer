@@ -1,7 +1,7 @@
 {
   "name": "NewsPicks 金融ビューア",
   "short_name": "金融ビューア",
-  "description": "NewsPicks の金融ニュースと YouTube 動画を、ふくろんがやさしく解説します",
+  "description": "NewsPicks の金融ニュースと YouTube 動画を、コーチ・マイクがわかりやすく解説します",
   "lang": "ja",
   "start_url": "/",
   "scope": "/",
