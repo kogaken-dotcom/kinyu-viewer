@@ -591,8 +591,24 @@
     .ask-log .q-me, .ask-log .a-bot div { font-size: 15px; }
     .ask-sugs button { font-size: 14px; padding: 8px 12px; }
     .ask-form button { padding: 0 18px; }
+    /* 検索欄は1行、その下に「期間・並び順・カテゴリ」を同じ幅で並べる（小さいスマホでもはみ出さない） */
+    .search { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 8px; }
+    /* おすすめ5選の1番は、写真を上・文字を下に（横に並べると文字の列が細くなりすぎる） */
+    .pk.first { flex-direction: column; }
+    .pk.first .ph { width: 100%; height: auto; aspect-ratio: 16 / 9; }
+    .pk .ph { width: 96px; height: 70px; }
+    /* コーチ・マイクのふきだしは、画面の幅に収まるように折り返す */
+    .chat-fab .say { white-space: normal; width: max-content; max-width: calc(100vw - 120px); }
+    .search input { grid-column: 1 / -1; }
+    .search select { width: 100%; min-width: 0; padding: 9px 6px; text-overflow: ellipsis; }
     /* iPhone は 16px より小さい入力欄を押すと画面を勝手に拡大するので、16px にそろえる */
     input, select, textarea { font-size: 16px !important; }
+  }
+  /* とても小さいスマホ（iPhone SE など） */
+  @media (max-width: 380px) {
+    .pk .ph { width: 76px; height: 58px; }
+    .pk .tt { font-size: 13.5px; }
+    .wrap { padding-left: 12px; padding-right: 12px; }
   }
 </style>
 </head>
@@ -686,17 +702,17 @@
   }
   // 解説：一覧には「ひとこと」だけ入っていて、全文は開いたときに data/ex/番号.json から読む
   function bucketOf(id, n) { let h = 5381; for (const ch of String(id)) h = ((h * 33) ^ ch.charCodeAt(0)) >>> 0; return h % n; }
+  // その場で作った急ぎの解説（スマホに残したもの）より、定期更新で丁寧に作った解説を優先する
   async function fullExplanation(id) {
-    const local = store.get("localEx", {})[id];
-    if (local) return local;
     const meta = await getData("data/meta.json");
-    return (await getData(`data/ex/${bucketOf(id, meta.buckets)}.json`))[id] || null;
+    const shared = (await getData(`data/ex/${bucketOf(id, meta.buckets)}.json`))[id];
+    return shared || store.get("localEx", {})[id] || null;
   }
   // 静的データの記事を、画面が使う形（PC 版の /api/news と同じ形）にそろえる
   function shape(n) {
     const saved = store.get("savedItems", {});
     const local = store.get("localEx", {})[n.id];
-    const explanation = local || (n.oneLine ? { oneLine: n.oneLine, partial: true } : null);
+    const explanation = n.oneLine ? { oneLine: n.oneLine, partial: true } : local || null;
     return { ...n, explanation, saved: !!saved[n.id], savedAt: saved[n.id]?.savedAt || null };
   }
   // チャット用：記事・動画を言葉で探す（PC 版のサーバーと同じ考え方）
