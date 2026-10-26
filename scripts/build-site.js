@@ -1,7 +1,7 @@
 // スマホ用の公開サイトを site/ フォルダに作る（Cloudflare Pages に置く）
 //   - 画面（index.html）は PC 版と同じファイル。window.APP_MODE = "static" を入れて、データを静的ファイルから読むようにする
 //   - data/ … 一覧・解説・金利・おすすめを JSON にしたもの
-//   - functions/ … コーチ・マイクのチャット・深掘り質問・その場の解説（Cloudflare Pages Functions）
+//   - functions/ … コーチ・マイクのチャット・深掘り質問・その場の解説・共有リンク（Cloudflare Pages Functions）
 //   - lib/ … functions が使う AI の部分（PC 版と同じファイル）
 
 const fs = require("fs");
@@ -75,6 +75,10 @@ for (const [id, e] of Object.entries(ex)) if (all.has(String(id))) buckets[bucke
 buckets.forEach((b, i) => write(`data/ex/${i}.json`, b));
 // 動画の概要欄も、同じ番号のファイルに分けて置く（一覧には入れず、その場で解説・質問するときだけ読む）
 videoSummaries.forEach((b, i) => write(`data/vs/${i}.json`, b));
+// 共有リンク（/s/記事ID）を LINE などに貼ったときに出す、タイトル・要点・写真
+const og = Array.from({ length: BUCKETS }, () => ({}));
+for (const n of all.values()) og[bucketOf(n.id)][n.id] = { t: n.title, o: n.oneLine || "", i: n.image || "" };
+og.forEach((b, i) => write(`data/og/${i}.json`, b));
 
 // ---------- 金利・おすすめ・設定 ----------
 write("data/rates.json", jsonfile.read("rates.json", { jp: {}, us: {}, errors: ["まだ取得していません"] }));
@@ -103,7 +107,7 @@ write("robots.txt", "User-agent: *\nDisallow: /\n");
 
 // ---------- Cloudflare 用の設定と関数 ----------
 // /api/* だけ関数を動かす（それ以外はただのファイルなので無料枠を使わない）
-write("_routes.json", { version: 1, include: ["/api/*"], exclude: [] });
+write("_routes.json", { version: 1, include: ["/api/*", "/s/*"], exclude: [] });
 write("_headers", [
   "/data/*",
   "  Cache-Control: public, max-age=300",
@@ -114,6 +118,7 @@ write("_headers", [
   "",
 ].join("\n"));
 for (const f of ["chat.js", "ask.js", "explain.js", "ai.js"]) copy(`functions/api/${f}`, `functions/api/${f}`);
+copy("functions/s/[id].js", "functions/s/[id].js");
 for (const f of ["sarashina.js", "genres.js", "body.js", "ask.js", "chat-ai.js", "cf-util.js"]) copy(`lib/${f}`, `lib/${f}`);
 
 const size = (dir) => fs.readdirSync(dir, { withFileTypes: true }).reduce((s, d) => s + (d.isDirectory() ? size(path.join(dir, d.name)) : fs.statSync(path.join(dir, d.name)).size), 0);

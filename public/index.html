@@ -712,6 +712,11 @@
     .fx-col .spread { grid-column: auto; flex-direction: column; justify-content: center; gap: 0; align-items: center; }
   }
 
+  /* ===== 共有ボタン（スマホでは「元の記事を読む」を1段目、「保存」「共有」を2段目に） ===== */
+  @media (max-width: 560px) {
+    .m-actions .btn.primary { flex-basis: 100%; }
+  }
+
   /* ===== 絞り込み：「お客様のタイプ」「ジャンル」はボタンにして、タップで一覧を開く ===== */
   .fbar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .fbtn { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; text-align: left; border: 0; border-radius: 12px; padding: 8px 12px;
@@ -1335,6 +1340,7 @@
         <div class="m-actions">
           <a class="btn primary" href="${esc(n.url)}" target="_blank" rel="noopener">${n.kind !== "video" ? "元の記事を読む ↗" : String(n.id).startsWith("pv-") ? "PIVOTで見る ↗" : "YouTubeで見る ↗"}</a>
           <button class="btn" data-star="${n.id}" aria-pressed="${n.saved}">${n.saved ? "★ 保存済み" : "☆ 保存する"}</button>
+          <button class="btn share" data-share>📤 共有</button>
         </div>
       </div>`;
 
@@ -1404,6 +1410,61 @@
       making.set(id, e.message);
     }
     render();
+  }
+
+  // ===== 共有 =====
+  // 共有リンクは公開サイトの /s/記事ID（LINE などに貼るとタイトルと写真が出て、開くとその記事の解説が出る）
+  const PUBLIC_URL = "https://kinyu-viewer.pages.dev";
+  const shareUrl = (id) => `${STATIC ? location.origin : PUBLIC_URL}/s/${encodeURIComponent(id)}`;
+
+  function shareText(n) {
+    const e = n.explanation && !n.explanation.partial && !n.explanation.missing ? n.explanation : null;
+    const oneLine = e?.oneLine || n.explanation?.oneLine;
+    const lines = [`📰 ${n.title}`];
+    if (oneLine) lines.push("", `💡 ${oneLine}`);
+    if (e?.points?.length) lines.push("", "📌 ポイント", ...e.points.map((p, i) => `${"①②③④⑤⑥⑦⑧"[i] || "・"} ${p}`));
+    if (e?.customerTalk) lines.push("", "🗣 お客様にはこう話す", e.customerTalk);
+    lines.push("", "▶ くわしい解説はこちら（Finsight）");
+    return lines.join("\n");
+  }
+
+  // スマホは共有メニュー（LINE・メールなど）を開く。使えないときは、要約とリンクをコピーする
+  async function shareItem(id) {
+    const n = findItem(id);
+    if (!n) return;
+    const url = shareUrl(n.id);
+    const text = shareText(n);
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: n.title, text, url });
+        return;
+      } catch (e) {
+        if (e.name === "AbortError") return; // 共有メニューを閉じただけ
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      toast("要約とリンクをコピーしました。LINE やメールに貼り付けて送れます");
+    } catch {
+      toast("コピーできませんでした");
+    }
+  }
+
+  // 共有リンク（?a=記事ID）から開いたときは、その記事の解説を開く
+  async function openShared() {
+    const id = new URLSearchParams(location.search).get("a");
+    if (!id) return;
+    history.replaceState(null, "", location.pathname);
+    let n = findItem(id);
+    if (!n && STATIC) {
+      const hit = (await getData("data/search.json").catch(() => [])).find((x) => sameId(x, id));
+      if (hit) {
+        n = shape(hit);
+        chatItems.push(n); // いま表示しているカテゴリにない記事でも開けるように
+      }
+    }
+    if (n) openModal(n.id);
+    else toast("共有された記事が見つかりませんでした（古くなって消えた可能性があります）");
   }
 
   // ===== 保存 =====
@@ -1770,6 +1831,7 @@
       if (sec && box) box.scrollTo({ top: sec.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - 12, behavior: "smooth" });
       return;
     }
+    if (ev.target.closest("[data-share]")) return shareItem(current);
     const copy = ev.target.closest("[data-copy]");
     if (copy) {
       const text = findItem(current)?.explanation?.customerTalk || "";
@@ -1798,7 +1860,7 @@
   $("today").textContent = new Date().toLocaleDateString("ja-JP", { month: "long", day: "numeric", weekday: "short" }) + "のニュース";
   window.addEventListener("scroll", () => $("totop").classList.toggle("show", window.scrollY > 600), { passive: true });
   $("totop").addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
-  Promise.all([loadCategories(), loadSaved()]).then(() => load(false));
+  Promise.all([loadCategories(), loadSaved()]).then(() => load(false)).then(openShared);
 </script>
 </body>
 </html>
