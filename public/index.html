@@ -703,6 +703,15 @@
   .c-sugs button:hover, .ask-sugs button:hover { background: color-mix(in srgb, var(--gold) 10%, var(--card)); }
   .c-form input:focus, .ask-form input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 22%, transparent); }
 
+  /* ===== ドル円（金利の右に、日米金利差と横に並べる） ===== */
+  .fx-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; min-width: 290px; }
+  .fx .ri .v { font-size: 22px; }
+  .fx-col .spread { min-width: 0; }
+  @media (max-width: 860px) {
+    .fx-col { grid-column: 1 / -1; min-width: 0; }
+    .fx-col .spread { grid-column: auto; flex-direction: column; justify-content: center; gap: 0; align-items: center; }
+  }
+
   /* ===== 絞り込み：「お客様のタイプ」「ジャンル」はボタンにして、タップで一覧を開く ===== */
   .fbar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .fbtn { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; text-align: left; border: 0; border-radius: 12px; padding: 8px 12px;
@@ -1577,6 +1586,23 @@
     </div>`;
   }
 
+  // ドル円（1ドル何円か）。数字が上がる＝円安、下がる＝円高
+  function fxCard(r) {
+    if (!r) return `<div class="rate-card fx"><h4>💵 ドル円</h4><div class="ri"><div class="v">—</div></div></div>`;
+    const ch = r.change ?? 0;
+    const cls = ch === 0 ? "flat" : ch > 0 ? "up" : "down";
+    const word = ch > 0 ? "円安" : ch < 0 ? "円高" : "変わらず";
+    return `<div class="rate-card fx" title="1ドルを買うのに何円いるか（${esc(r.date)}時点・欧州中央銀行の参照レート）。数字が上がると円安、下がると円高">
+      <h4>💵 ドル円 <small>${esc(r.date.slice(5).replace("-", "/"))}時点</small></h4>
+      <div class="ri">
+        <div class="k">1ドル ＝</div>
+        <div class="v">${r.value.toFixed(2)}<small>円</small></div>
+        <span class="d ${cls}">${ch > 0 ? "▲" : ch < 0 ? "▼" : "→"} ${Math.abs(ch).toFixed(2)}円 ${word}</span>
+        ${spark(r.history)}
+      </div>
+    </div>`;
+  }
+
   function renderRates(d) {
     const jp = d.jp, us = d.us;
     const latestJp = [jp.y10?.date, jp.y2?.date].filter(Boolean).sort().at(-1);
@@ -1600,12 +1626,15 @@
           ${rateItem("国債10年", us.y10)}
         </div>
       </div>
-      <div class="rate-card spread" title="アメリカの10年国債と日本の10年国債の利回りの差。差が大きいほど円安になりやすいと言われます">
-        <div class="k">日米金利差（10年）</div>
-        <div class="v">${gap == null ? "—" : gap.toFixed(2) + "%"}</div>
-        <div class="s">差が大きいほど<br>円安になりやすい</div>
+      <div class="fx-col">
+        ${fxCard(d.fx?.usdjpy)}
+        <div class="rate-card spread" title="アメリカの10年国債と日本の10年国債の利回りの差。差が大きいほど円安になりやすいと言われます">
+          <div class="k">日米金利差（10年）</div>
+          <div class="v">${gap == null ? "—" : gap.toFixed(2) + "%"}</div>
+          <div class="s">差が大きいほど<br>円安になりやすい</div>
+        </div>
       </div>
-      <div class="rates-note">※ 日本銀行・財務省・FRED（米セントルイス連銀）の公開データ。1日1回の更新で、前の営業日との差を表示しています。${d.errors?.length ? " 一部取得できませんでした：" + esc(d.errors.join(" / ")) : ""}</div>`;
+      <div class="rates-note">※ 日本銀行・財務省・FRED（米セントルイス連銀）・ECB（欧州中央銀行）の公開データ。1日1回の更新で、前の営業日との差を表示しています。${d.errors?.length ? " 一部取得できませんでした：" + esc(d.errors.join(" / ")) : ""}</div>`;
   }
 
   async function loadRates() {
