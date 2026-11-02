@@ -16,6 +16,7 @@ const saved = require("./lib/saved");
 const explainer = require("./lib/explainer");
 const chat = require("./lib/chat");
 const { askAbout } = require("./lib/ask");
+const { storyCopy, isAllowedImage } = require("./lib/story-ai");
 const { getRates } = require("./lib/rates");
 const { getPicks } = require("./lib/picks");
 const { GENRES, guessGenre, normalizeGenre } = require("./lib/genres");
@@ -141,6 +142,34 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, await askAbout(article, e, messages));
     } catch (e) {
       return sendJson(res, 500, { error: e.message });
+    }
+  }
+
+  // インスタのストーリー用の文章
+  if (url.pathname === "/api/story" && req.method === "POST") {
+    try {
+      const { id } = await readJson(req);
+      const article = archive.get(String(id)) || saved.all()[String(id)]?.article;
+      if (!article) return sendJson(res, 404, { error: "記事が見つかりません。一覧を更新してください" });
+      const e = explanations.load()[article.id] || saved.all()[String(id)]?.explanation || null;
+      return sendJson(res, 200, await storyCopy(article, e));
+    } catch (e) {
+      return sendJson(res, 500, { error: e.message });
+    }
+  }
+
+  // 記事・動画の画像を取り寄せる（決まった場所の画像だけ。ストーリーの画像に描き込むため）
+  if (url.pathname === "/api/img" && req.method === "GET") {
+    const u = url.searchParams.get("u") || "";
+    if (!isAllowedImage(u)) return sendJson(res, 400, { error: "この画像は読めません" });
+    try {
+      const r = await fetch(u, { redirect: "manual", signal: AbortSignal.timeout(15000) });
+      const type = r.headers.get("content-type") || "";
+      if (!r.ok || !type.startsWith("image/")) return sendJson(res, 404, { error: "画像が見つかりません" });
+      res.writeHead(200, { "Content-Type": type, "Cache-Control": "public, max-age=86400" });
+      return res.end(Buffer.from(await r.arrayBuffer()));
+    } catch (e) {
+      return sendJson(res, 502, { error: e.message });
     }
   }
 

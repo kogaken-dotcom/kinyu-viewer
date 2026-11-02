@@ -117,9 +117,9 @@ write("_headers", [
   "  Cache-Control: no-cache",
   "",
 ].join("\n"));
-for (const f of ["chat.js", "ask.js", "explain.js", "ai.js"]) copy(`functions/api/${f}`, `functions/api/${f}`);
+for (const f of ["chat.js", "ask.js", "explain.js", "ai.js", "story.js", "img.js"]) copy(`functions/api/${f}`, `functions/api/${f}`);
 copy("functions/s/[id].js", "functions/s/[id].js");
-for (const f of ["sarashina.js", "genres.js", "body.js", "ask.js", "chat-ai.js", "cf-util.js"]) copy(`lib/${f}`, `lib/${f}`);
+for (const f of ["sarashina.js", "genres.js", "body.js", "ask.js", "chat-ai.js", "cf-util.js", "story-ai.js"]) copy(`lib/${f}`, `lib/${f}`);
 
 const size = (dir) => fs.readdirSync(dir, { withFileTypes: true }).reduce((s, d) => s + (d.isDirectory() ? size(path.join(dir, d.name)) : fs.statSync(path.join(dir, d.name)).size), 0);
 console.log(`site/ を作りました（記事・動画 ${all.size}件、解説 ${Object.keys(ex).length}件、合計 ${(size(OUT) / 1e6).toFixed(1)}MB）`);

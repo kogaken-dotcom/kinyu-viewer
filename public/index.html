@@ -925,6 +925,11 @@
           store.set("localEx", localEx);
           return fakeResponse(e);
         }
+        case "/api/story": {
+          const n = findItem(body.id);
+          const e = n?.explanation?.partial ? await fullExplanation(String(body.id)) : n?.explanation;
+          return fakeResponse(await callFunction("/api/story", { item: n, explanation: e }));
+        }
         case "/api/ask": {
           const n = await withVideoSummary(findItem(body.id));
           const e = n?.explanation?.partial ? await fullExplanation(String(body.id)) : n?.explanation;
@@ -1481,11 +1486,14 @@
 
   // ===== インスタグラムのストーリー用の画像 =====
   // サイトから直接は投稿できないので、1080×1920 の画像を作り、スマホの共有メニューからインスタに渡す。
-  // 記事の写真は著作権があるので使わず、文字だけで作る。上下はインスタのボタンに隠れるので空ける
-  const STORY = { W: 1080, H: 1920, X: 90, TOP: 270, LIMIT: 1420 };
+  // 一般の人向けの短い文章と、記事・動画の画像だけを載せる。リンクは元の記事・動画のもの。
+  // 上下はインスタのボタンに隠れるので空ける
+  const STORY = { W: 1080, H: 1920, X: 90, TOP: 270, BOTTOM: 1540 };
+  const storyCopies = new Map(); // 記事ごとの文章（開き直しても同じ文章を使う）
   let storyFile = null;
   let storyLink = "";
   let storyUrl = "";
+  let storyId = null;
 
   function wrapText(ctx, text, width, maxLines) {
     const NO_START = "、。，．・）」』】！？ー…ぁぃぅぇぉっゃゅょァィゥェォッャュョ";
@@ -1505,19 +1513,28 @@
     return lines;
   }
 
-  async function drawStory(n, e) {
-    const { W, H, X, TOP, LIMIT } = STORY;
-    const points = (e.points?.length ? e.points : sentences(e.simple)).slice(0, 3);
+  // 記事・動画の画像を読み込む（読めないときは null。文字だけの画像にする）
+  async function loadStoryImage(src) {
+    if (!src) return null;
+    try {
+      const res = await fetch(`/api/img?u=${encodeURIComponent(src)}`);
+      if (!res.ok) return null;
+      return await createImageBitmap(await res.blob());
+    } catch {
+      return null;
+    }
+  }
+
+  async function drawStory(n, copy, img) {
+    const { W, H, X, TOP, BOTTOM } = STORY;
     const body = '"Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic UI", sans-serif';
     const head = '"Shippori Mincho", "Yu Mincho", serif';
-    const all = [n.title, e.oneLine, ...points, n.publisher, genreLabel(n.genre)].join("");
+    const all = [copy.hook, ...copy.lines, n.publisher].join("");
     // 文字が足りないフォントを読み込んでから描く（4秒で読めなければ端末の文字で描く）
     await Promise.race([
       Promise.all([
-        document.fonts.load(`700 60px "Shippori Mincho"`, all),
-        document.fonts.load(`500 40px "Zen Kaku Gothic New"`, all),
-        document.fonts.load(`700 92px "Cormorant Garamond"`, "Fin"),
-        document.fonts.load(`italic 600 92px "Cormorant Garamond"`, "sight"),
+        document.fonts.load(`800 72px "Shippori Mincho"`, all),
+        document.fonts.load(`500 42px "Zen Kaku Gothic New"`, all),
       ]).catch(() => {}),
       new Promise((r) => setTimeout(r, 4000)),
     ]);
@@ -1526,110 +1543,108 @@
     c.width = W;
     c.height = H;
     const x = c.getContext("2d");
-    const bg = x.createLinearGradient(0, 0, W * 0.5, H);
-    bg.addColorStop(0, "#0b1d33");
-    bg.addColorStop(0.6, "#13294a");
-    bg.addColorStop(1, "#0f2742");
-    x.fillStyle = bg;
+    x.fillStyle = "#0b1d33";
     x.fillRect(0, 0, W, H);
+
+    let y = TOP;
+    if (img) {
+      // 背景：画像を小さくしてから広げて、ぼかす（古い iPhone でも同じように見える方法）
+      const small = document.createElement("canvas");
+      small.width = 27;
+      small.height = 48;
+      const sx = small.getContext("2d");
+      const cover = Math.max(small.width / img.width, small.height / img.height);
+      sx.drawImage(img, (small.width - img.width * cover) / 2, (small.height - img.height * cover) / 2, img.width * cover, img.height * cover);
+      x.imageSmoothingEnabled = true;
+      x.imageSmoothingQuality = "high";
+      x.drawImage(small, 0, 0, W, H);
+      x.fillStyle = "rgba(8,18,32,.68)";
+      x.fillRect(0, 0, W, H);
+      // 手前：画像を横幅いっぱいに、切らずに置く（縦に長い画像だけ上下を切る）
+      const pw = W - X * 2;
+      const ph = Math.min(pw * (img.height / img.width), 640);
+      const scale = pw / img.width;
+      const srcH = ph / scale;
+      x.save();
+      x.beginPath();
+      x.roundRect(X, y, pw, ph, 24);
+      x.clip();
+      x.drawImage(img, 0, (img.height - srcH) / 2, img.width, srcH, X, y, pw, ph);
+      x.restore();
+      y += ph;
+    }
+
+    // 見出し
+    y += 70;
     x.textBaseline = "alphabetic";
-
-    // ロゴと金の線
-    let y = TOP + 70;
-    x.fillStyle = "#f6f4ef";
-    x.font = `700 92px "Cormorant Garamond", serif`;
-    x.fillText("Fin", X, y);
-    const finW = x.measureText("Fin").width;
     x.fillStyle = "#d8b878";
-    x.font = `italic 600 92px "Cormorant Garamond", serif`;
-    x.fillText("sight", X + finW, y);
-    y += 34;
-    x.fillRect(X, y, W - X * 2, 3);
-
-    // ジャンルとタイトル
-    y += 66;
-    x.font = `700 34px ${body}`;
-    x.fillText(genreLabel(n.genre), X, y);
-    y += 30;
+    x.fillRect(X, y, 72, 5);
+    y += 24;
     x.fillStyle = "#ffffff";
-    x.font = `700 60px ${head}`;
-    for (const l of wrapText(x, n.title, W - X * 2, 4)) {
-      y += 82;
+    x.font = `800 72px ${head}`;
+    for (const l of wrapText(x, copy.hook, W - X * 2, 3)) {
+      y += 96;
       x.fillText(l, X, y);
     }
 
-    // ひとこと要約（金の線つきの枠）
-    y += 46;
-    x.font = `700 44px ${body}`;
-    const hero = wrapText(x, e.oneLine, W - X * 2 - 76, 4);
-    const heroH = hero.length * 66 + 56;
-    x.fillStyle = "rgba(216,184,120,.13)";
-    x.beginPath();
-    x.roundRect(X, y, W - X * 2, heroH, 20);
-    x.fill();
-    x.fillStyle = "#d8b878";
-    x.fillRect(X, y + 20, 6, heroH - 40);
+    // 暮らしとの関係
+    y += 34;
     x.fillStyle = "#f6f4ef";
-    hero.forEach((l, i) => x.fillText(l, X + 44, y + 76 + i * 66));
-    y += heroH + 44;
+    x.font = `500 42px ${body}`;
+    for (const t of copy.lines) {
+      for (const l of wrapText(x, t, W - X * 2, 2)) {
+        if (y + 64 > BOTTOM - 60) break;
+        y += 64;
+        x.fillText(l, X, y);
+      }
+      y += 12;
+    }
 
-    // ポイント（入るところまで）
-    x.font = `500 38px ${body}`;
-    points.forEach((p, i) => {
-      const lines = wrapText(x, p, W - X * 2 - 76, 4);
-      if (y + lines.length * 56 > LIMIT) return;
-      x.fillStyle = "#d8b878";
-      x.beginPath();
-      x.arc(X + 24, y + 26, 24, 0, Math.PI * 2);
-      x.fill();
-      x.fillStyle = "#0f2742";
-      x.font = `700 28px ${body}`;
-      x.textAlign = "center";
-      x.fillText(String(i + 1), X + 24, y + 36);
-      x.textAlign = "left";
-      x.fillStyle = "#f6f4ef";
-      x.font = `500 38px ${body}`;
-      lines.forEach((l, j) => x.fillText(l, X + 76, y + 40 + j * 56));
-      y += lines.length * 56 + 22;
-    });
-
-    // 出典と注意書き（下の余白の上に固定）
-    x.fillStyle = "rgba(246,244,239,.72)";
+    // 出典（下の余白の上に固定）
+    x.fillStyle = "rgba(246,244,239,.75)";
     x.font = `500 28px ${body}`;
-    x.fillText(wrapText(x, `出典：${n.publisher}`, W - X * 2, 1)[0], X, 1456);
-    x.fillText("AIによる要約です。正確な内容は元の情報をご確認ください。", X, 1500);
+    x.fillText(wrapText(x, `出典：${n.publisher}　／　文章はAIによる要約`, W - X * 2, 1)[0], X, BOTTOM);
     return new Promise((resolve) => c.toBlob(resolve, "image/png"));
   }
 
-  async function openStory(id) {
+  async function openStory(id, { fresh = false } = {}) {
     closeStory();
+    storyId = id;
     const box = $("story");
-    box.innerHTML = `<button class="x" data-story-close aria-label="閉じる">×</button><h3>📸 ストーリー用の画像</h3><p>作成中…</p>`;
+    box.innerHTML = `<button class="x" data-story-close aria-label="閉じる">×</button><h3>📸 ストーリー用の画像</h3><p>一般の方に伝わる言葉で作成中…</p>`;
     box.classList.add("show");
     try {
       await loadFullFor(id);
       const n = findItem(id);
-      const e = n?.explanation;
-      if (!e?.oneLine || e.partial || e.missing) throw new Error("解説を読み込めませんでした");
-      const blob = await drawStory(n, e);
+      if (!n) throw new Error("記事が見つかりませんでした");
+      if (fresh || !storyCopies.has(String(id))) {
+        const res = await apiFetch("/api/story", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "文章を作れませんでした");
+        storyCopies.set(String(id), data);
+      }
+      const blob = await drawStory(n, storyCopies.get(String(id)), await loadStoryImage(n.image));
       if (!blob) throw new Error("画像を作れませんでした");
-      storyFile = new File([blob], `finsight-story-${n.id}.png`, { type: "image/png" });
+      if (storyId !== id || !box.classList.contains("show")) return; // 作っている間に閉じられた
+      storyFile = new File([blob], `story-${n.id}.png`, { type: "image/png" });
       storyUrl = URL.createObjectURL(blob);
-      storyLink = shareUrl(n.id);
+      storyLink = n.url;
       const canSend = !!navigator.canShare?.({ files: [storyFile] });
+      const where = n.kind === "video" ? "動画" : "記事";
       box.innerHTML = `<button class="x" data-story-close aria-label="閉じる">×</button>
         <h3>📸 ストーリー用の画像</h3>
         <img class="story-img" src="${storyUrl}" alt="ストーリー用の画像">
-        <p class="story-warn">AI の要約です。投稿する前に、内容をご確認ください。</p>
+        <p class="story-warn">AI が書いた文章です。投稿する前に、内容をご確認ください。</p>
         <div class="story-btns">
           ${canSend ? `<button class="btn primary" data-story-send>インスタに送る</button>` : ""}
           <button class="btn${canSend ? "" : " primary"}" data-story-save>画像を保存</button>
-          <button class="btn" data-story-link>リンクをコピー</button>
+          <button class="btn" data-story-link>${where}のリンクをコピー</button>
+          <button class="btn" data-story-redo>別の言い方にする</button>
         </div>
         <ol>
           ${canSend ? `<li>「インスタに送る」を押し、一覧から <b>Instagram</b> →「<b>ストーリーズ</b>」を選ぶ</li>`
             : `<li>画像を保存し、Instagram のストーリー作成画面で選ぶ</li>`}
-          <li>リンクも載せるなら、スタンプの「<b>リンク</b>」に貼り付ける${canSend ? "（送るときに自動でコピーします）" : ""}</li>
+          <li>スタンプの「<b>リンク</b>」に、元の${where}のリンクを貼り付ける${canSend ? "（送るときに自動でコピーします）" : ""}</li>
         </ol>`;
     } catch (err) {
       box.innerHTML = `<button class="x" data-story-close aria-label="閉じる">×</button><h3>📸 ストーリー用の画像</h3><p>${esc(err.message)}</p>`;
@@ -1654,7 +1669,7 @@
   async function copyStoryLink() {
     try {
       await navigator.clipboard.writeText(storyLink);
-      toast("リンクをコピーしました");
+      toast("元のリンクをコピーしました");
     } catch {
       toast("コピーできませんでした");
     }
@@ -1664,6 +1679,7 @@
     if (ev.target.closest("[data-story-close]")) return closeStory();
     if (ev.target.closest("[data-story-save]")) return saveStory();
     if (ev.target.closest("[data-story-link]")) return copyStoryLink();
+    if (ev.target.closest("[data-story-redo]")) return openStory(storyId, { fresh: true });
     if (ev.target.closest("[data-story-send]")) {
       navigator.clipboard?.writeText(storyLink).catch(() => {}); // リンクスタンプに貼れるように
       try {
