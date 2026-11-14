@@ -756,6 +756,21 @@
     .totop { display: none; }
   }
 
+  /* ===== カーソルを合わせたときの記事のポップ（PC だけ） ===== */
+  .peek { position: fixed; z-index: 19; width: min(340px, calc(100vw - 20px)); padding: 14px 16px 12px; border-radius: 16px;
+    background: var(--card); color: var(--text); pointer-events: none; overflow: hidden;
+    box-shadow: 0 22px 50px -16px rgba(15,39,66,.5), inset 0 0 0 1px var(--line), inset 3px 0 0 var(--gold);
+    opacity: 0; visibility: hidden; transform: translateY(6px) scale(.98); transition: opacity .15s, transform .2s, visibility 0s .2s; }
+  .peek.show { opacity: 1; visibility: visible; transform: none; transition: opacity .15s, transform .2s; }
+  .peek-g { font-size: 11px; font-weight: 700; color: var(--c, var(--muted)); margin-bottom: 4px; }
+  .peek-t { font-family: "Shippori Mincho", serif; font-size: 15px; font-weight: 700; line-height: 1.5; margin-bottom: 8px;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .peek-o { font-size: 13.5px; line-height: 1.7; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--gold) 10%, var(--card)); }
+  .peek-o.soft { color: var(--muted); background: var(--bg); }
+  .peek-p { margin: 8px 0 0; padding-left: 1.3em; font-size: 12.5px; line-height: 1.65; color: var(--sub); }
+  .peek-p li { margin-bottom: 4px; }
+  .peek-h { margin-top: 8px; font-size: 11px; color: var(--muted); text-align: right; }
+
   /* ===== 絞り込み：「お客様のタイプ」「ジャンル」はボタンにして、タップで一覧を開く ===== */
   .fbar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .fbtn { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; text-align: left; border: 0; border-radius: 12px; padding: 8px 12px;
@@ -821,6 +836,7 @@
 <button class="totop" id="totop" aria-label="上に戻る">↑</button>
 <button class="menu-fab" id="menuFab" aria-label="メニューを開く" aria-expanded="false" aria-controls="menu">☰ メニュー</button>
 <nav class="menu" id="menu" aria-label="メニュー"></nav>
+<div class="peek" id="peek" role="tooltip"></div>
 <button class="chat-fab" id="chatFab" aria-label="コーチ・マイクに聞く"><span class="say">Hey！お金のこと、なんでも聞いてくれ！</span><span id="fabOwl"></span></button>
 <div class="chat" id="chat" role="dialog" aria-label="AIアシスタント">
   <div class="c-head">
@@ -1502,7 +1518,26 @@
     window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 12, behavior: "smooth" });
   }
 
-  $("menuFab").addEventListener("click", () => ($("menu").classList.contains("show") ? closeMenu() : openMenu()));
+  // マウスが使える PC かどうか（カーソルを合わせたときのポップは、PC だけで出す）
+  const canHover = matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+  // PC では、ボタンを押すと「開く」だけにする（カーソルで開いた直後に押して、閉じてしまわないように）
+  $("menuFab").addEventListener("click", () => {
+    if (!$("menu").classList.contains("show")) openMenu();
+    else if (!canHover) closeMenu();
+  });
+  // PC：カーソルを合わせるとメニューが開き、ボタンとメニューの外に出ると少しして閉じる
+  if (canHover) {
+    let menuTimer = null;
+    $("menuFab").addEventListener("mouseenter", () => {
+      clearTimeout(menuTimer);
+      if (!$("menu").classList.contains("show")) openMenu();
+    });
+    for (const el of [$("menuFab"), $("menu")]) {
+      el.addEventListener("mouseenter", () => clearTimeout(menuTimer));
+      el.addEventListener("mouseleave", () => { menuTimer = setTimeout(closeMenu, 350); });
+    }
+  }
   $("menu").addEventListener("click", async (ev) => {
     const b = ev.target.closest("button");
     if (!b) return;
@@ -1536,6 +1571,80 @@
     if ($("menu").classList.contains("show") && !ev.composedPath().some((el) => el.id === "menu" || el.id === "menuFab")) closeMenu();
   });
   document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") closeMenu(); });
+
+  // ===== 記事のカードにカーソルを合わせたときのポップ（ひとこと要約とポイント。PC だけ） =====
+  let peekTimer = null;
+  let peekEl = null;
+
+  function peekHtml(n, e) {
+    const one = e?.oneLine || n.explanation?.oneLine || n.oneLine;
+    const points = (e?.points || []).slice(0, 3);
+    return `<div class="peek-g" style="--c:${color(n.genre)}">${esc(genreLabel(n.genre))} ・ ${esc(n.publisher)} ・ ${ago(n.publishedAt)}</div>
+      <div class="peek-t">${esc(n.title)}</div>
+      ${one ? `<div class="peek-o">💡 ${esc(one)}</div>` : `<div class="peek-o soft">まだ解説はありません</div>`}
+      ${points.length ? `<ol class="peek-p">${points.map((p) => `<li>${esc(p)}</li>`).join("")}</ol>` : ""}
+      <div class="peek-h">クリックで解説を開く</div>`;
+  }
+
+  // カードの右に出す。入らなければ左、それも入らなければ、カードの上と下の広いほうに出す（カードに重ねない）
+  function placePeek(card) {
+    const p = $("peek"), r = card.getBoundingClientRect(), m = 10;
+    const vw = innerWidth, vh = innerHeight;
+    p.style.maxHeight = "";
+    const pw = p.offsetWidth;
+    let left = r.right + m;
+    if (left + pw > vw - m) left = r.left - pw - m;
+    if (left >= m) {
+      p.style.left = `${Math.round(left)}px`;
+      p.style.top = `${Math.round(Math.min(Math.max(m, r.top), vh - p.offsetHeight - m))}px`;
+      return;
+    }
+    const below = vh - r.bottom - m * 2, above = r.top - m * 2;
+    p.style.maxHeight = `${Math.max(below, above)}px`; // 入りきらないところは隠す
+    p.style.left = `${Math.round(Math.min(Math.max(m, r.left), vw - pw - m))}px`;
+    p.style.top = `${Math.round(below >= above ? r.bottom + m : r.top - m - p.offsetHeight)}px`;
+  }
+
+  async function showPeek(card) {
+    const id = card.dataset.id || card.dataset.open;
+    const n = findItem(id);
+    if (!n) return;
+    const full = (x) => (x && !x.partial && !x.missing ? x : null);
+    $("peek").innerHTML = peekHtml(n, full(n.explanation));
+    $("peek").classList.add("show");
+    placePeek(card);
+    // スマホ版の一覧には「ひとこと」しか入っていないので、ポイントは解説のファイルから読む
+    if (STATIC && !full(n.explanation) && n.explanation?.partial) {
+      const e = await fullExplanation(String(n.id)).catch(() => null);
+      if (e && peekEl === card) {
+        $("peek").innerHTML = peekHtml(n, e);
+        placePeek(card);
+      }
+    }
+  }
+
+  function hidePeek() {
+    clearTimeout(peekTimer);
+    peekEl = null;
+    $("peek").classList.remove("show");
+  }
+
+  if (canHover) {
+    const PEEK_TARGET = ".card[data-id], .pk[data-open], .rk[data-open]";
+    $("list").addEventListener("mouseover", (ev) => {
+      const card = ev.target.closest(PEEK_TARGET);
+      if (!card || card === peekEl) return;
+      hidePeek();
+      peekEl = card;
+      peekTimer = setTimeout(() => { if (peekEl === card) showPeek(card); }, 350); // さっと通り過ぎただけでは出さない
+    });
+    $("list").addEventListener("mouseout", (ev) => {
+      const card = ev.target.closest(PEEK_TARGET);
+      if (card && !card.contains(ev.relatedTarget)) hidePeek();
+    });
+    window.addEventListener("scroll", hidePeek, { passive: true });
+    document.addEventListener("click", hidePeek, true);
+  }
 
   // ===== 共有 =====
   // 共有リンクは公開サイトの /s/記事ID（LINE などに貼るとタイトルと写真が出て、開くとその記事の解説が出る）
