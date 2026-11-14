@@ -108,7 +108,27 @@ write("robots.txt", "User-agent: *\nDisallow: /\n");
 // ---------- Cloudflare 用の設定と関数 ----------
 // /api/* だけ関数を動かす（それ以外はただのファイルなので無料枠を使わない）
 write("_routes.json", { version: 1, include: ["/api/*", "/s/*"], exclude: [] });
+// 安全のための指示（ブラウザに守ってもらう）:
+//   ほかのサイトに埋め込ませない・決まった場所からしかプログラムや文字の形を読み込まない・カメラなどは使わない
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src https://fonts.gstatic.com",
+  "img-src 'self' data: blob: https:",
+  "connect-src 'self'",
+  "manifest-src 'self'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join("; ");
 write("_headers", [
+  "/*",
+  `  Content-Security-Policy: ${CSP}`,
+  "  X-Frame-Options: DENY",
+  "  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()",
+  "  Strict-Transport-Security: max-age=31536000",
   "/data/*",
   "  Cache-Control: public, max-age=300",
   "/index.html",
