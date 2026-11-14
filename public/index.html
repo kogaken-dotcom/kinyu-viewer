@@ -756,6 +756,47 @@
     .totop { display: none; }
   }
 
+  /* ===== コーチ・マイクの動きとエフェクト（右下で、ときどき動いたり、操作に反応したりする） ===== */
+  /* ふきだしはマイクの上に出す（画面の下の真ん中に出るお知らせと重ならないように） */
+  .chat-fab .say { right: 0; bottom: 84px; white-space: normal; width: max-content; max-width: min(260px, calc(100vw - 60px)); text-align: left;
+    animation: none; opacity: 0; transform: translateY(6px) scale(.9); transform-origin: bottom right;
+    transition: opacity .25s, transform .35s cubic-bezier(.2,.9,.25,1.3); }
+  .chat-fab .say.on { opacity: 1; transform: none; }
+  .totop { right: 102px; bottom: calc(32px + env(safe-area-inset-bottom)); } /* 「上に戻る」はマイクの左に（ふきだしと重ならないように） */
+  #fabOwl { display: block; }
+  #fabOwl.act-jump { animation: mjump .9s cubic-bezier(.3,.7,.3,1); }
+  @keyframes mjump { 0% { transform: none; } 15% { transform: translateY(3px) scale(1.14, .84); } 45% { transform: translateY(-32px) scale(.94, 1.08); }
+    75% { transform: translateY(0) scale(1.12, .88); } 100% { transform: none; } }
+  #fabOwl.act-spin { animation: mspin .9s cubic-bezier(.4,.1,.3,1); }
+  @keyframes mspin { 0% { transform: none; } 45% { transform: translateY(-16px) rotate(180deg) scale(1.08); } 100% { transform: rotate(360deg); } }
+  #fabOwl.act-tilt { animation: mtilt .8s ease-in-out; }
+  @keyframes mtilt { 0%, 100% { transform: none; } 25% { transform: rotate(-14deg) translateY(-4px); } 60% { transform: rotate(10deg); } }
+  #fabOwl.act-wave .wing-r { animation: mwave .32s ease-in-out 4 alternate; }
+  @keyframes mwave { from { transform: rotate(0); } to { transform: rotate(40deg); } }
+  #fabOwl.act-cheer { animation: mhop .26s ease-in-out 6 alternate; }
+  #fabOwl.act-cheer .wing-l { animation: flapL .26s ease-in-out 6; }
+  #fabOwl.act-cheer .wing-r { animation: flapR .26s ease-in-out 6; }
+  @keyframes mhop { to { transform: translateY(-8px); } }
+  #fabOwl.act-throw { animation: mlean .7s ease-in-out; }
+  #fabOwl.act-throw .wing-r { animation: mthrow .6s cubic-bezier(.3,.6,.2,1); }
+  @keyframes mlean { 40% { transform: rotate(8deg); } 70% { transform: rotate(-10deg) translateX(-3px); } }
+  @keyframes mthrow { 40% { transform: rotate(-55deg); } 70% { transform: rotate(45deg); } }
+  /* エフェクト（星・紙ふぶき・砂ぼこり・ボールなど）。マイクと同じ場所に重ねて、外へ飛ばす */
+  .mike-fx { position: fixed; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom)); width: 72px; height: 72px; z-index: 17; pointer-events: none; }
+  .chat-fab.hidden ~ .mike-fx { display: none; }
+  .mike-fx i { position: absolute; left: 50%; top: 50%; font-style: normal; font-weight: 900; line-height: 1; white-space: nowrap; will-change: transform, opacity;
+    animation: fxfly var(--t, .9s) cubic-bezier(.2,.7,.3,1) forwards; }
+  @keyframes fxfly { 0% { transform: translate(-50%, -50%) scale(.3); opacity: 0; } 15% { opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(var(--s, 1)) rotate(var(--r, 0deg)); opacity: 0; } }
+  .mike-fx i.ball { font-size: 26px; animation: fxball 1.15s cubic-bezier(.3,.1,.6,1) forwards; }
+  @keyframes fxball { 0% { transform: translate(-50%, -50%); opacity: 0; } 10% { opacity: 1; }
+    50% { transform: translate(calc(-50% - 110px), calc(-50% - 160px)) rotate(-300deg); }
+    100% { transform: translate(calc(-50% - 230px), calc(-50% - 50px)) rotate(-640deg); opacity: 0; } }
+  .mike-fx i.ring { width: 72px; height: 72px; border-radius: 50%; border: 3px solid #d8b878; animation: fxring .8s ease-out forwards; }
+  @keyframes fxring { from { transform: translate(-50%, -50%) scale(.6); opacity: .9; } to { transform: translate(-50%, -50%) scale(2); opacity: 0; } }
+  .mike-fx i.word { font-size: 17px; color: #c8102e; text-shadow: 0 0 3px #fff, 0 0 6px #fff, 0 2px 0 #fff; }
+  .c-head .av.pop { animation: mhop .22s ease-in-out 4 alternate; }
+
   /* ===== カーソルを合わせたときの記事のポップ（PC だけ） ===== */
   .peek { position: fixed; z-index: 19; width: min(340px, calc(100vw - 20px)); padding: 14px 16px 12px; border-radius: 16px;
     background: var(--card); color: var(--text); pointer-events: none; overflow: hidden;
@@ -838,6 +879,7 @@
 <nav class="menu" id="menu" aria-label="メニュー"></nav>
 <div class="peek" id="peek" role="tooltip"></div>
 <button class="chat-fab" id="chatFab" aria-label="コーチ・マイクに聞く"><span class="say">Hey！お金のこと、なんでも聞いてくれ！</span><span id="fabOwl"></span></button>
+<div class="mike-fx" id="mikeFx" aria-hidden="true"></div>
 <div class="chat" id="chat" role="dialog" aria-label="AIアシスタント">
   <div class="c-head">
     <span class="av" id="chatAv"></span>
@@ -1096,7 +1138,10 @@
     if (streak.last !== today) {
       const yesterday = ymd(Date.now() - 86400000);
       streak = { last: today, count: streak.last === yesterday ? streak.count + 1 : 1 };
-      if (streak.count >= 2) setTimeout(() => toast(`🔥 ${streak.count}日連続で読んでいます！`), 600);
+      if (streak.count >= 2) {
+        setTimeout(() => toast(`🔥 ${streak.count}日連続で読んでいます！`), 600);
+        mikeStreak = streak.count; // 記事を閉じたら、マイクがお祝いする
+      }
     }
     try { localStorage.setItem("read", JSON.stringify(readMap)); localStorage.setItem("streak", JSON.stringify(streak)); } catch {}
     return first;
@@ -1325,6 +1370,7 @@
     $("shade").classList.remove("show");
     $("modal").classList.remove("show");
     document.body.classList.remove("modal-open");
+    setTimeout(mikeAfterRead, 450);
   }
 
   // ===== 深掘り質問（記事ごとに会話を覚えておく） =====
@@ -1646,6 +1692,137 @@
     document.addEventListener("click", hidePeek, true);
   }
 
+  // ===== コーチ・マイクの動き（ときどき自分で動き、保存・読了・連続記録・チャットに反応する） =====
+  const calm = matchMedia("(prefers-reduced-motion: reduce)").matches; // 動きを減らす設定の人には動かさない
+  const ACTS = ["jump", "spin", "tilt", "wave", "cheer", "throw"];
+  let sayTimer = null;
+  let actTimer = null;
+  let mikeStreak = null; // 記事を読んでいる間に連続記録が伸びたら、閉じたときにお祝いする
+
+  const mikeBusy = () => document.hidden || $("chatFab").classList.contains("hidden") || !!current || $("menu").classList.contains("show");
+
+  function mikeSay(text, ms = 4200) {
+    const s = document.querySelector("#chatFab .say");
+    if (!s || $("chatFab").classList.contains("hidden")) return;
+    s.textContent = text;
+    s.classList.add("on");
+    clearTimeout(sayTimer);
+    sayTimer = setTimeout(() => s.classList.remove("on"), ms);
+  }
+
+  // エフェクト：マイクのまわりに、星・紙ふぶき・砂ぼこり・ボールなどを飛ばす
+  function burst(kind) {
+    const box = $("mikeFx");
+    if (calm || !box) return;
+    const add = (text, style, cls = "") => {
+      const i = document.createElement("i");
+      i.className = cls;
+      i.textContent = text;
+      i.style.cssText = style;
+      i.addEventListener("animationend", () => i.remove());
+      box.appendChild(i);
+    };
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    if (kind === "stars") {
+      for (let k = 0; k < 10; k++) {
+        const a = (Math.PI * 2 * k) / 10 + rnd(0, 0.4), d = rnd(55, 85);
+        add(k % 2 ? "★" : "✦", `--dx:${Math.cos(a) * d}px;--dy:${Math.sin(a) * d - 20}px;--r:${rnd(-120, 120) | 0}deg;--s:${rnd(0.7, 1.3).toFixed(2)};` +
+          `color:${["#d8b878", "#f6c343", "#ffffff"][k % 3]};font-size:${rnd(14, 24) | 0}px;text-shadow:0 0 4px rgba(15,39,66,.5);animation-delay:${k * 12}ms`);
+      }
+    }
+    if (kind === "confetti") {
+      for (let k = 0; k < 20; k++) {
+        add(["■", "●", "▲", "★"][k % 4], `--dx:${rnd(-130, 70)}px;--dy:${rnd(-200, -60)}px;--r:${rnd(-360, 360) | 0}deg;--s:${rnd(0.6, 1.1).toFixed(2)};--t:1.3s;` +
+          `color:${["#c8102e", "#1d4ed8", "#f6c343", "#d8b878", "#16a34a"][k % 5]};font-size:${rnd(9, 15) | 0}px;animation-delay:${k * 15}ms`);
+      }
+    }
+    if (kind === "dust") {
+      for (let k = 0; k < 6; k++) {
+        const side = k % 2 ? 1 : -1;
+        add("●", `top:88%;--dx:${side * rnd(22, 48)}px;--dy:${rnd(-4, 10)}px;--s:${rnd(1.2, 2).toFixed(2)};--t:.7s;color:rgba(170,160,140,.55);font-size:${rnd(7, 11) | 0}px`);
+      }
+    }
+    if (kind === "ball") add("🏈", "", "ball");
+    if (kind === "ring") add("", "", "ring");
+    if (kind === "whistle") add("ピッ！", "--dx:-50px;--dy:-62px;--s:1.15;--t:1.1s", "word");
+  }
+
+  function mikeAct(name) {
+    const o = $("fabOwl");
+    if (calm || !o || document.hidden || $("chatFab").classList.contains("hidden")) return;
+    o.classList.remove(...ACTS.map((a) => `act-${a}`));
+    void o.offsetWidth; // 同じ動きを続けて出せるように、いったん外してから付け直す
+    o.classList.add(`act-${name}`);
+    clearTimeout(actTimer);
+    actTimer = setTimeout(() => o.classList.remove(`act-${name}`), 1700);
+    if (name === "jump") setTimeout(() => burst("dust"), 650);
+    if (name === "spin") burst("stars");
+    if (name === "cheer") { burst("stars"); burst("ring"); }
+    if (name === "throw") setTimeout(() => burst("ball"), 220);
+    if (name === "tilt") burst("whistle");
+  }
+
+  // 何もしていないときの動き（15〜25秒に1回）
+  const IDLE = [
+    ["jump", "Let's go！気になるニュースはあるか？"],
+    ["throw", "パスだ！…じゃなくて、ニュースを1本読もうぜ！"],
+    ["spin", "質問はいつでもウェルカムだぜ！"],
+    ["wave", "金利やお金のことなら、任せてくれ！"],
+    ["tilt", "今日のおすすめ5選、もう見たか？"],
+    ["cheer", "その調子だぜ！ナイス・リーディング！"],
+  ];
+  function idleLoop() {
+    setTimeout(() => {
+      if (!mikeBusy()) {
+        const [act, line] = IDLE[Math.floor(Math.random() * IDLE.length)];
+        mikeAct(act);
+        mikeSay(line);
+      }
+      idleLoop();
+    }, 15000 + Math.random() * 10000);
+  }
+
+  function greeting() {
+    const h = new Date().getHours();
+    if (h < 5) return "夜ふかしは体に悪いぜ…でも1本だけな！";
+    if (h < 11) return "おはよう！今日も攻めていこうぜ！";
+    if (h < 17) return "Hey！お金のこと、なんでも聞いてくれ！";
+    return "今日もお疲れ！1本だけ読んでいこうぜ！";
+  }
+
+  // 記事を閉じたとき：読んだことをほめる（連続記録が伸びていたら、紙ふぶきでお祝い）
+  const READ_LINES = ["Good job！1本読破だぜ！", "ナイス！知識がまた1つ増えたぜ！", "その調子！次の1本もいこうぜ！", "お客様に話せるネタ、ゲットだぜ！"];
+  function mikeAfterRead() {
+    if (mikeBusy()) return;
+    if (mikeStreak) {
+      mikeAct("cheer");
+      burst("confetti");
+      mikeSay(`🔥 ${mikeStreak}日連続！最高のチームプレーだぜ！`, 5000);
+      mikeStreak = null;
+      return;
+    }
+    mikeAct("jump");
+    mikeSay(READ_LINES[Math.floor(Math.random() * READ_LINES.length)], 3200);
+  }
+
+  // 保存したとき・チャットで答えたとき
+  function mikeCheerSave() {
+    mikeAct("cheer");
+    burst("confetti");
+    mikeSay("ナイス保存！あとで一緒に復習しようぜ！", 3500);
+  }
+  function mikePopAvatar() {
+    const av = $("chatAv");
+    if (calm || !av) return;
+    av.classList.remove("pop");
+    void av.offsetWidth;
+    av.classList.add("pop");
+  }
+
+  setTimeout(() => { mikeAct("wave"); mikeSay(greeting(), 5000); }, 2500);
+  idleLoop();
+  if (canHover) $("chatFab").addEventListener("mouseenter", () => { mikeAct("wave"); mikeSay("呼んだか？なんでも聞いてくれ！", 2500); });
+
   // ===== 共有 =====
   // 共有リンクは公開サイトの /s/記事ID（LINE などに貼るとタイトルと写真が出て、開くとその記事の解説が出る）
   const PUBLIC_URL = "https://kinyu-viewer.pages.dev";
@@ -1917,6 +2094,7 @@
     setTimeout(() => { burstId = null; }, 700);
     render();
     toast(save ? "★ 保存しました" : "保存をやめました");
+    if (save && !current) mikeCheerSave(); // 記事を開いているときは、閉じたあとに読了のほうでほめる
     try {
       const res = await apiFetch("/api/saved", {
         method: save ? "POST" : "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }),
@@ -2034,6 +2212,7 @@
       const answer = data.answer || "";
       chatHistory.push({ role: "assistant", content: [answer, data.reply].filter(Boolean).join("\n") + (data.items.length ? "\n紹介したもの: " + data.items.map((n) => n.title).join(" / ") : "") });
       // まず質問への答え、そのあとに「関連する記事・動画」を出す
+      mikePopAvatar();
       chatAdd((answer ? `<div class="row-bot">${mascot()}<div class="msg bot answer">${esc(answer)}</div></div>` : "") +
         (data.items.length
           ? `${answer ? `<div class="c-rel">📚 もっと知りたいなら、これを読んでくれ！</div>` : `<div class="row-bot">${mascot()}<div class="msg bot">${esc(data.reply)}</div></div>`}
