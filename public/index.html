@@ -937,6 +937,57 @@
   @keyframes doorTxt { to { opacity: 0; transform: scale(.9); } }
   @media (prefers-reduced-motion: reduce) { .c-door { display: none; } }
 
+  /* ===== 今日のスタメン5：スタメン発表（テレビ中継のメンバー紹介のように） ===== */
+  .lineup { background: linear-gradient(160deg, #0b1d33, #13294a 70%, #0f2742); color: #fff; padding: 18px 14px 16px; }
+  .lineup::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(380px 160px at 85% 0%, rgba(255,248,214,.18), transparent 70%); }
+  .lineup .picks-h { position: relative; z-index: 1; }
+  .lu-kicker { width: 100%; font-family: "Cormorant Garamond", serif; font-size: 13px; font-weight: 700; letter-spacing: .32em; color: #d8b878; }
+  .lineup .picks-h h2 { color: #fff; }
+  .lineup .picks-h .sub, .lineup .picks-h small { color: rgba(255,255,255,.7); }
+  .lu-list { position: relative; z-index: 1; display: grid; gap: 8px; }
+  .lineup .sk-row { height: 72px; border-radius: 14px; background: rgba(255,255,255,.07); animation: none; }
+  .pk.lu { display: grid; grid-template-columns: 52px 30px 96px minmax(0, 1fr); align-items: center; gap: 10px; padding: 8px 12px 8px 8px;
+    overflow: hidden; border-radius: 14px; color: #fff; background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(255,255,255,.09); animation: none; }
+  .pk.lu:hover { transform: translateX(4px); background: rgba(255,255,255,.11); box-shadow: inset 0 0 0 1px rgba(216,184,120,.5); }
+  .pk.lu.cap { background: linear-gradient(90deg, rgba(216,184,120,.2), rgba(255,255,255,.06)); box-shadow: inset 0 0 0 1.5px rgba(216,184,120,.7); }
+  /* ユニフォームの形に、背番号 */
+  .lu-shirt { position: relative; width: 50px; height: 46px; display: grid; place-items: center; background: var(--c);
+    clip-path: polygon(30% 0, 70% 0, 100% 20%, 88% 42%, 79% 36%, 79% 100%, 21% 100%, 21% 36%, 12% 42%, 0 20%); }
+  .lu-shirt b { margin-top: 6px; font-family: "Cormorant Garamond", serif; font-size: 22px; font-weight: 700; color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.3); }
+  .lu-shirt i { position: absolute; right: 13px; top: 15px; width: 12px; height: 12px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 8px; font-style: normal; font-weight: 900; color: #0b1d33; background: #d8b878; }
+  .lu-pos { font-size: 12px; font-weight: 900; letter-spacing: .05em; color: #d8b878; text-align: center; line-height: 1.2; }
+  .lu-pos small { display: block; font-size: 9px; font-weight: 700; color: rgba(255,255,255,.7); letter-spacing: 0; }
+  .pk.lu .ph { width: 96px; height: 60px; border-radius: 10px; }
+  .pk.lu .g { color: color-mix(in srgb, var(--c) 45%, #fff); }
+  .pk.lu .tt { color: #fff; font-family: "Shippori Mincho", serif; font-size: 15px; -webkit-line-clamp: 2; }
+  .pk.lu.cap .tt { font-size: 16.5px; }
+  .pk.lu .why { color: rgba(255,255,255,.75); }
+  .pk.lu .why b { color: #d8b878; }
+  /* 発表の演出：1本ずつ右からすべり込み、光が走る */
+  .lineup.lu-anim .pk.lu { opacity: 0; transform: translateX(46px); }
+  .lineup.lu-anim.go .pk.lu { animation: luIn .6s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: calc(var(--i) * .32s + .2s); }
+  .lineup.lu-anim.go .pk.lu::after { content: ""; position: absolute; inset: 0; pointer-events: none; transform: translateX(-100%);
+    background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.32) 50%, transparent 70%);
+    animation: luShine .9s ease-out forwards; animation-delay: calc(var(--i) * .32s + .45s); }
+  @keyframes luIn { 0% { opacity: 0; transform: translateX(46px) skewX(-10deg); } 60% { opacity: 1; transform: translateX(-5px) skewX(0); } 100% { opacity: 1; transform: none; } }
+  @keyframes luShine { to { transform: translateX(100%); } }
+  @media (prefers-reduced-motion: reduce) { .lineup.lu-anim .pk.lu { opacity: 1; transform: none; } }
+  @media (max-width: 560px) {
+    .pk.lu { grid-template-columns: 42px 72px minmax(0, 1fr); gap: 8px; }
+    .pk.lu .lu-pos { display: none; }
+    .lu-shirt { width: 42px; height: 40px; } .lu-shirt b { font-size: 19px; } .lu-shirt i { right: 10px; top: 13px; }
+    .pk.lu .ph { width: 72px; height: 50px; }
+    .pk.lu .tt { font-size: 14px; } .pk.lu.cap .tt { font-size: 15px; }
+    .pk.lu .why { display: none; }
+  }
+
+  /* ===== 解説の文字の強弱：数字は色付きの太字、「ことばメモ」の言葉は蛍光ペン、段落の1文目は少し太く ===== */
+  .m-body strong.num { font-weight: 800; color: var(--accent); }
+  .m-body b.kw { font-weight: 700; background: linear-gradient(transparent 60%, color-mix(in srgb, var(--gold) 40%, transparent) 60%); padding: 0 1px; }
+  .m-body .para p:first-child { font-weight: 600; color: var(--text); }
+
   /* ===== カーソルを合わせたときの記事のポップ（PC だけ） ===== */
   .peek { position: fixed; z-index: 19; width: min(340px, calc(100vw - 20px)); padding: 14px 16px 12px; border-radius: 16px;
     background: var(--card); color: var(--text); pointer-events: none; overflow: hidden;
@@ -1461,13 +1512,14 @@
         <h2>${esc(g.label)}<span class="n">${g.items.length}件</span></h2>
         <div class="list">${g.items.slice(0, shown.get(g.id) || firstCount()).map(cardHtml).join("")}</div>
         ${g.items.length > (shown.get(g.id) || firstCount())
-          ? `<button class="more" data-more="${g.id}">⚽ パスをつなぐ：${esc(g.label)}をもっと見る（あと${g.items.length - (shown.get(g.id) || firstCount())}件）</button>` : ""}
+          ? `<button class="more" data-more="${g.id}">${esc(g.label)}をもっと見る（あと${g.items.length - (shown.get(g.id) || firstCount())}件）</button>` : ""}
       </section>`).join("") : `<div class="empty">${empty}</div>`);
     if (animateNext) {
       document.querySelectorAll("#list .card").forEach((c, i) => { c.classList.add("enter"); c.style.setProperty("--i", Math.min(i, 14)); });
       animateNext = false;
     }
     if (current) renderModal();
+    watchLineup();
   }
 
   // ===== 注目エリア =====
@@ -1497,25 +1549,51 @@
   }
 
   // 今日のおすすめ5選（カテゴリに関係なく、ニュースと動画の中から AI が選ぶ）
+  // スタメン発表のように見せる。背番号・ポジションを付け、1本ずつ順番に登場させる（ページを開いて最初に見えたときだけ）
+  const LINEUP = [["10", "FW", "エース"], ["9", "FW", ""], ["7", "MF", ""], ["8", "MF", ""], ["4", "DF", ""]];
+  let lineupDone = false;
   function picksHtml() {
-    if (!picks) return `<div class="picks"><div class="picks-h"><h2>⚽ 今日のスタメン5 <span class="sub">おすすめ5選</span></h2><small>コーチ・マイクが選んでいます…</small></div>
-      <div class="picks-grid">${'<div class="sk-row" style="grid-column:1/-1;height:130px"></div>' + '<div class="sk-row"></div>'.repeat(4)}</div></div>`;
+    const head = (note) => `<div class="picks-h"><div class="lu-kicker">STARTING LINEUP</div>
+        <h2>⚽ 今日のスタメン5 <span class="sub">おすすめ5選</span></h2><small>${note}</small></div>`;
+    if (!picks) return `<div class="picks lineup">${head("コーチ・マイクがメンバーを選んでいます…")}
+      <div class="lu-list">${'<div class="sk-row"></div>'.repeat(5)}</div></div>`;
     if (!picks.items.length) return "";
     const d = new Date(picks.createdAt);
-    return `<div class="picks">
-      <div class="picks-h"><h2>⚽ 今日のスタメン5 <span class="sub">おすすめ5選</span></h2>
-        <small>${d.getMonth() + 1}月${d.getDate()}日 ${d.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })} に${picks.byAi ? "コーチ・マイク（AI）が、今日とくに読んでおきたいものを選びました" : "注目度の高い順に選びました"}</small></div>
-      <div class="picks-grid">${picks.items.map((n, i) => `
-        <button class="pk${i === 0 ? " first" : ""}" data-open="${n.id}" style="--c:${color(n.genre)}">
-          <span class="num">${i + 1}</span>
+    const note = `${d.getMonth() + 1}月${d.getDate()}日 ${d.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })} に${picks.byAi ? "コーチ・マイク（AI）が、今日とくに読んでおきたい5本を選びました" : "注目度の高い順に選びました"}`;
+    return `<div class="picks lineup${lineupDone ? "" : " lu-anim"}">${head(note)}
+      <div class="lu-list">${picks.items.map((n, i) => {
+        const [no, pos, tag] = LINEUP[i] || [String(i + 1), "SUB", ""];
+        return `<button class="pk lu${i === 0 ? " cap" : ""}" data-open="${n.id}" style="--c:${color(n.genre)}; --i:${i}">
+          <span class="lu-shirt"><b>${no}</b>${i === 0 ? '<i title="キャプテン">C</i>' : ""}</span>
+          <span class="lu-pos">${pos}${tag ? `<small>${tag}</small>` : ""}</span>
           <span class="ph">${n.image ? `<img src="${esc(n.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ""}${n.kind === "video" ? '<span class="vid">▶ 動画</span>' : ""}</span>
           <span class="tx">
             <span class="g">${esc(genres.find((g) => g.id === n.genre)?.icon || "")} ${esc(genreLabel(n.genre))} ・ ${esc(n.publisher)}${isRead(n) ? " ・ ✓ 読んだ" : ""}</span>
             <span class="tt">${esc(n.title)}</span>
             ${n.reason ? `<span class="why"><b>なぜ今日？</b>${esc(n.reason)}</span>` : n.explanation ? `<span class="why">${esc(n.explanation.oneLine)}</span>` : ""}
           </span>
-        </button>`).join("")}</div>
+        </button>`;
+      }).join("")}</div>
     </div>`;
+  }
+
+  // スタメン発表が画面に入ったら、1本ずつ登場させる（1回だけ。マイクがアナウンスする）
+  function watchLineup() {
+    const box = document.querySelector("#list .lineup.lu-anim");
+    if (!box || lineupDone || !picks?.items?.length) return;
+    const go = () => {
+      if (lineupDone) return;
+      lineupDone = true;
+      // 描き直されていることがあるので、いま画面にあるほうに付ける
+      document.querySelector("#list .lineup.lu-anim")?.classList.add("go");
+      mikeAct("wave");
+      mikeSay("本日のスターティングメンバーを発表するぜ！", 3800);
+    };
+    // 念のため：画面に入った合図が来なくても、4秒たったら必ず表示する（記事が見えないままにならないように）
+    setTimeout(go, 4000);
+    if (!("IntersectionObserver" in window)) return go();
+    const io = new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting)) { io.disconnect(); go(); } }, { threshold: 0.25 });
+    io.observe(box);
   }
 
   async function loadPicks() {
@@ -1620,6 +1698,19 @@
       </button>`).join("")}</div></div>`;
   }
 
+  // 解説の文章に強弱をつける（文字は先に無害な形にしてから、数字と言葉に印を付ける）
+  const NUM_RE = /([+\-−＋▲▼約]?[0-9０-９][0-9０-９,，.．]*(?:[〜~][0-9０-９][0-9０-９,，.．]*)?\s?(?:％|%|兆円|億円|万円|千円|円|兆ドル|億ドル|万ドル|ドル|兆|億|万人|万|人|件|社|倍|か月|ヶ月|カ月|歳|位|bp|ポイント))/g;
+  function emph(text, e) {
+    let h = esc(text || "");
+    const terms = [...new Set((e?.terms || []).map((t) => String(t.term || "").trim()).filter((t) => t.length >= 2))]
+      .sort((a, b) => b.length - a.length).slice(0, 12);
+    for (const t of terms) {
+      const et = esc(t);
+      if (h.includes(et) && !h.includes(`>${et}<`)) h = h.split(et).join(`<b class="kw">${et}</b>`);
+    }
+    return h.replace(NUM_RE, '<strong class="num">$1</strong>');
+  }
+
   function renderModal() {
     const n = findItem(current);
     if (!n) return closeModal();
@@ -1639,9 +1730,10 @@
 
     let body;
     if (e) {
-      const list = (t) => `<ul>${sentences(t).map((s) => `<li>${esc(s)}</li>`).join("")}</ul>`;
+      const hl = (t) => emph(t, e);
+      const list = (t) => `<ul>${sentences(t).map((s) => `<li>${hl(s)}</li>`).join("")}</ul>`;
       // 長い文章は1文ずつ段落に分ける（スマホの細い画面で、文字のかたまりにならないように）
-      const paras = (t, cls = "") => `<div class="para ${cls}">${sentences(t).map((s) => `<p>${esc(s)}</p>`).join("")}</div>`;
+      const paras = (t, cls = "") => `<div class="para ${cls}">${sentences(t).map((s) => `<p>${hl(s)}</p>`).join("")}</div>`;
       // 見出しへ飛ぶボタン（解説が長いので、読みたいところへすぐ行けるように）
       const secs = [
         e.points?.length && ["pts", "📌", "ポイント"], e.background && ["bg", "🧭", "背景"], ["easy", "💡", "かんたん"], ["life", "🏠", "影響"],
@@ -1649,15 +1741,15 @@
       ].filter(Boolean);
       body = `
         <div class="m-body${modalFresh ? " anim" : ""}" style="--c:${color(n.genre)}">
-          <div class="hero">${esc(e.oneLine)}</div>
+          <div class="hero">${hl(e.oneLine)}</div>
           <nav class="sec-nav" aria-label="解説の目次">${secs.map(([id, icon, label]) => `<button data-jump="${id}"><span class="ic">${icon} </span>${label}</button>`).join("")}</nav>
-          ${e.points?.length ? `<div class="blk sec" id="sec-pts"><h3>📌 記事のポイント</h3><ol class="pts">${e.points.map((p) => `<li>${esc(p)}</li>`).join("")}</ol></div>` : ""}
+          ${e.points?.length ? `<div class="blk sec" id="sec-pts"><h3>📌 記事のポイント</h3><ol class="pts">${e.points.map((p) => `<li>${hl(p)}</li>`).join("")}</ol></div>` : ""}
           ${e.background ? `<div class="blk sec" id="sec-bg"><h3>🧭 背景・しくみ</h3>${paras(e.background)}</div>` : ""}
           <div class="blk sec" id="sec-easy"><h3>💡 かんたんに言うと</h3>${e.points?.length ? paras(e.simple, "soft") : list(e.simple)}</div>
           <div class="blk sec" id="sec-life"><h3>🏠 くらし・お金への影響</h3>${list(e.impact)}</div>
-          ${e.views?.length ? `<div class="blk sec" id="sec-views"><h3>💬 NewsPicks のコメントから見える視点 <small>（意見です）</small></h3>${e.views.map((v) => `<blockquote class="view">${esc(v)}</blockquote>`).join("")}</div>` : ""}
+          ${e.views?.length ? `<div class="blk sec" id="sec-views"><h3>💬 NewsPicks のコメントから見える視点 <small>（意見です）</small></h3>${e.views.map((v) => `<blockquote class="view">${hl(v)}</blockquote>`).join("")}</div>` : ""}
           <div class="blk sec" id="sec-talk"><h3>🗣 お客様にはこう話す</h3>
-            <div class="bubble"><button class="btn copy" data-copy>コピー</button>${sentences(e.customerTalk).map((s) => `<p>${esc(s)}</p>`).join("")}</div>
+            <div class="bubble"><button class="btn copy" data-copy>コピー</button>${sentences(e.customerTalk).map((s) => `<p>${hl(s)}</p>`).join("")}</div>
           </div>
           ${e.terms.length ? `<div class="blk sec" id="sec-terms"><h3>📖 ことばメモ</h3><div class="terms">${e.terms.map((t) => `<div class="term"><b>${esc(t.term)}</b>${esc(t.meaning)}</div>`).join("")}</div></div>` : ""}
           ${askHtml(n)}
