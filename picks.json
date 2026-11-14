@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-14",
+  "createdAt": "2026-11-14T15:06:59.840Z",
+  "signature": "17907732,yt-XfVZnlWFrOU,yt-CBPJaMCuKow,yt-TD83-Z652J4,yt-C4JOpIccPN8,17853663,yt-L0aErEaC0kU,17913639,17910857,17909032,yt-X26URPD2Pes,yt-lot2IwLYMtk,17906125,yt-fX5696fZna4,17908758,17911835,17910138,17911259,17902940,17913317",
+  "byAi": true,
+  "error": null,
+  "picks": [
+    {
+      "id": "17909032",
+      "reason": "S&P500の上昇予想は投資判断に影響大"
+    },
+    {
+      "id": "yt-L0aErEaC0kU",
+      "reason": "ビットコインの動向は資産分散に重要"
+    },
+    {
+      "id": "yt-TD83-Z652J4",
+      "reason": "個別株投資の基本知識が広く役立つ"
+    },
+    {
+      "id": "17902940",
+      "reason": "AIと雇用の関係は将来設計に必須"
+    },
+    {
+      "id": "17913317",
+      "reason": "住宅取得支援は家計に直接関係"
+    }
+  ]
+}
