@@ -937,46 +937,55 @@
   @keyframes doorTxt { to { opacity: 0; transform: scale(.9); } }
   @media (prefers-reduced-motion: reduce) { .c-door { display: none; } }
 
-  /* ===== 今日のスタメン：ピッチの上のフォーメーション（テレビ中継のスタメン発表のように） ===== */
+  /* ===== フォーメーション：ピッチの上に、記事（写真＋タイトル）が主役で並ぶ ===== */
   .lineup { background: radial-gradient(500px 220px at 50% -10%, rgba(120,150,255,.22), transparent 70%), linear-gradient(170deg, #070f2b, #0b1d4a 55%, #0a1638);
     color: #fff; padding: 18px 14px 14px; }
   .lineup .picks-h { position: relative; z-index: 1; }
   .lu-kicker { width: 100%; font-family: "Cormorant Garamond", serif; font-size: 13px; font-weight: 700; letter-spacing: .32em; color: #d8b878; }
   .lineup .picks-h h2 { color: #fff; }
   .lineup .picks-h .sub, .lineup .picks-h small { color: rgba(255,255,255,.72); }
-  .fm-pitch { position: relative; aspect-ratio: 1000 / 640; margin-top: 4px; }
-  .fm-svg { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 18px 24px rgba(0,0,0,.45)); }
-  /* 選手（記事）：ユニフォーム＋足もとの影＋タイトル */
-  .fm-p { position: absolute; transform: translate(-50%, -38%); display: flex; flex-direction: column; align-items: center; gap: 2px;
-    border: 0; padding: 0; background: none; color: #fff; cursor: pointer; width: min(130px, 15%); min-width: 84px; }
-  .fm-shirt { width: 44px; height: 44px; filter: drop-shadow(0 6px 5px rgba(0,0,0,.45)); transition: transform .2s; }
-  .fm-p::before { content: ""; position: absolute; top: 36px; left: 50%; width: 38px; height: 9px; transform: translateX(-50%); border-radius: 50%;
-    background: radial-gradient(closest-side, rgba(0,0,0,.45), transparent); z-index: -1; }
-  .fm-name { max-width: 100%; padding: 2px 6px; border-radius: 6px; font-size: 12px; font-weight: 700; line-height: 1.35; text-align: center;
-    background: rgba(5,12,30,.55); text-shadow: 0 1px 2px rgba(0,0,0,.7);
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .fm-p.ai .fm-name { box-shadow: inset 0 0 0 1px rgba(216,184,120,.75); }
-  .fm-p:hover .fm-shirt { transform: translateY(-4px) scale(1.08); }
-  .fm-p:hover .fm-name { background: rgba(5,12,30,.85); }
-  .fm-c { position: absolute; top: 2px; right: calc(50% - 30px); width: 15px; height: 15px; border-radius: 50%; display: grid; place-items: center;
-    font-size: 9px; font-style: normal; font-weight: 900; color: #0b1d33; background: #d8b878; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
-  .fm-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; margin-top: 8px; font-size: 11px; color: rgba(255,255,255,.7); }
-  .fm-legend .dot { display: inline-block; width: 9px; height: 9px; margin-right: 4px; border-radius: 3px; vertical-align: -1px; background: rgba(5,12,30,.6); box-shadow: inset 0 0 0 1px rgba(255,255,255,.4); }
-  .fm-legend .dot.ai { box-shadow: inset 0 0 0 1.5px #d8b878; }
-  /* 発表の演出：前の選手から順に、ポンッと出てくる */
-  .lineup.lu-anim .fm-p { opacity: 0; }
-  .lineup.lu-anim.go .fm-p { animation: fmIn .5s cubic-bezier(.2,.9,.25,1.3) forwards; animation-delay: calc(var(--i) * .18s + .2s); }
-  @keyframes fmIn { 0% { opacity: 0; transform: translate(-50%, -10%) scale(.4); } 100% { opacity: 1; transform: translate(-50%, -38%) scale(1); } }
-  @media (prefers-reduced-motion: reduce) { .lineup.lu-anim .fm-p { opacity: 1; } }
-  /* スマホ：ピッチを縦長にして、文字を小さめに */
+  .fm-pitch { position: relative; display: grid; gap: 22px; margin: 6px 0 10px; padding: 26px 7% 30px; min-height: 160px; }
+  .fm-row { position: relative; display: flex; justify-content: center; gap: 6%; }
+  .fm-row.r2, .fm-pitch.n2 .fm-row, .fm-pitch.n4 .fm-row.r1 { gap: 16%; }
+  .fm-svg { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 16px 22px rgba(0,0,0,.4)); }
+  /* 記事のカード（選手のかわり）：写真が主役、下にタイトル */
+  .fm-card { position: relative; flex: 0 1 230px; min-width: 0; border: 0; padding: 0; background: none; text-align: left;
+    color: #fff; cursor: pointer; transition: transform .2s; }
+  .fm-card::after { content: ""; position: absolute; left: 10%; right: 10%; bottom: -8px; height: 12px; border-radius: 50%; z-index: -1;
+    background: radial-gradient(closest-side, rgba(0,0,0,.45), transparent); }
+  .fm-card:hover { transform: translateY(-4px) scale(1.03); z-index: 2; }
+  .fm-card .ph { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 10px; background: #1b2b4a;
+    border: 2px solid rgba(255,255,255,.95); box-shadow: 0 10px 18px -6px rgba(0,0,0,.6); }
+  .fm-card .ph img { width: 100%; height: 100%; object-fit: cover; }
+  /* 写真がない・読めないときは、ジャンルの色の上にボール */
+  .fm-card .ph { background: linear-gradient(135deg, color-mix(in srgb, var(--c) 55%, #0b1d33), #0b1d33); }
+  .fm-card .ph::before { content: "⚽"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 30px; opacity: .55; }
+  .fm-card .ph img { position: relative; }
+  .fm-card .ph .vid { position: absolute; right: 6px; bottom: 6px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: #dc2626; }
+  .fm-card .tt { display: block; margin-top: 5px; padding: 5px 8px 6px; border-radius: 8px; font-size: 12.5px; font-weight: 700; line-height: 1.4;
+    background: rgba(5,12,30,.8); border-left: 3px solid var(--c); text-shadow: 0 1px 1px rgba(0,0,0,.4); }
+  .fm-card .tt { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .fm-card .tt small { display: block; font-size: 10px; font-weight: 700; color: color-mix(in srgb, var(--c) 45%, #fff); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fm-card .tt em { display: block; margin-top: 3px; font-style: normal; font-weight: 500; font-size: 11px; color: rgba(255,255,255,.78); }
+  .fm-card .tt em b { color: #d8b878; margin-right: 4px; }
+  .fm-card.cap .ph { border-color: #d8b878; box-shadow: 0 0 0 2px rgba(216,184,120,.45), 0 10px 18px -6px rgba(0,0,0,.6); }
+  .fm-c { position: absolute; left: 6px; top: 6px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 10px; font-style: normal; font-weight: 900; color: #0b1d33; background: #d8b878; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
+  .fm-read { position: absolute; left: 6px; bottom: 6px; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-style: normal; font-weight: 700; background: rgba(5,150,105,.9); }
+  .fm-card.read .ph img { filter: saturate(.6) brightness(.85); }
+  /* 今日のスタメンの発表：前から順に、ポンッと出てくる */
+  .lineup.lu-anim .fm-card { opacity: 0; }
+  .lineup.lu-anim.go .fm-card { animation: fmIn .55s cubic-bezier(.2,.9,.25,1.25) forwards; animation-delay: calc(var(--i) * .28s + .2s); }
+  @keyframes fmIn { 0% { opacity: 0; transform: translateY(26px) scale(.6); } 100% { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .lineup.lu-anim .fm-card { opacity: 1; } }
+  /* スマホ：ピッチを縦長にして、カードを大きめに */
   @media (max-width: 560px) {
     .lineup .picks-h h2 .sub { display: block; margin-top: 2px; }
-    .fm-pitch { aspect-ratio: 3 / 4; }
-    .fm-p { width: 22%; min-width: 0; }
-    .fm-shirt { width: 32px; height: 32px; }
-    .fm-p::before { top: 26px; width: 28px; }
-    .fm-name { font-size: 10px; padding: 1px 4px; }
-    .fm-c { width: 13px; height: 13px; font-size: 8px; right: calc(50% - 23px); }
+    .fm-pitch { gap: 16px; padding: 20px 3% 24px; }
+    .fm-row, .fm-row.r2, .fm-pitch.n2 .fm-row, .fm-pitch.n4 .fm-row.r1 { gap: 4%; }
+    .fm-card { flex-basis: 48%; }
+    .fm-card .tt { font-size: 11px; padding: 4px 6px 5px; -webkit-line-clamp: 3; }
+    .fm-card .tt small, .fm-card .tt em { display: none; }
   }
 
   /* ===== 解説の文字の強弱：数字は色付きの太字、「ことばメモ」の言葉は蛍光ペン、段落の1文目は少し太く ===== */
@@ -1503,13 +1512,19 @@
     const empty = view === "saved" && !savedItems.length
       ? "まだ保存した記事はありません。記事の ☆ を押すと、ここにずっと残ります"
       : "該当する記事がありません";
-    $("list").innerHTML = warn + (groups.length ? groups.map((g) => `
-      <section data-g="${g.id}" style="--c:${color(g.id)}; --icon:'${g.icon || "•"}'">
+    // ニュースを見ているとき（検索中以外）は、ジャンルごとに先頭の5本をピッチに並べる
+    const useFm = view === "news" && !$("q").value.trim();
+    $("list").innerHTML = warn + (groups.length ? groups.map((g) => {
+      const fmN = useFm ? Math.min(FM_MAX, g.items.length) : 0;
+      const limit = Math.max(shown.get(g.id) || firstCount(), fmN);
+      return `
+      <section data-g="${g.id}" data-fm="${fmN}" style="--c:${color(g.id)}; --icon:'${g.icon || "•"}'">
         <h2>${esc(g.label)}<span class="n">${g.items.length}件</span></h2>
-        <div class="list">${g.items.slice(0, shown.get(g.id) || firstCount()).map(cardHtml).join("")}</div>
-        ${g.items.length > (shown.get(g.id) || firstCount())
-          ? `<button class="more" data-more="${g.id}">${esc(g.label)}をもっと見る（あと${g.items.length - (shown.get(g.id) || firstCount())}件）</button>` : ""}
-      </section>`).join("") : `<div class="empty">${empty}</div>`);
+        ${fmN ? formationHtml(g.items) : ""}
+        <div class="list">${g.items.slice(fmN, limit).map(cardHtml).join("")}</div>
+        ${g.items.length > limit ? `<button class="more" data-more="${g.id}">${esc(g.label)}をもっと見る（あと${g.items.length - limit}件）</button>` : ""}
+      </section>`;
+    }).join("") : `<div class="empty">${empty}</div>`);
     if (animateNext) {
       document.querySelectorAll("#list .card").forEach((c, i) => { c.classList.add("enter"); c.style.setProperty("--i", Math.min(i, 14)); });
       animateNext = false;
@@ -1541,14 +1556,14 @@
             </span>
           </button>`).join("")}</div>
       </div>` : "";
-    return `<div class="spot">${picksHtml(list)}${meter}${rank}</div>`;
+    return `<div class="spot">${picksHtml()}${meter}${rank}</div>`;
   }
 
   // 今日のおすすめ5選（カテゴリに関係なく、ニュースと動画の中から AI が選ぶ）
-  // スタメン発表：ピッチの上にフォーメーション（4-2-3-1 のような形）で11本の記事を並べる。
-  // 前から順に、AI のおすすめ5本 → いま注目の記事6本。名前のかわりに記事のタイトルを出す（背番号はなし）
-  // 位置は [横％, 縦％]（奥ほどピッチがせまく見えるように、あとで横をちぢめる）
-  const FORMATION = [[50, 8], [32, 24], [68, 24], [12, 41], [88, 41], [36, 48], [64, 48], [20, 63], [50, 63], [80, 63], [50, 87]];
+  // フォーメーション：ピッチの上に、記事（写真＋タイトル）を最大5本並べる。
+  // 上（前線）ほど大事な記事。本数に合わせて、段ごとの本数を変える（5本なら 1・2・2）
+  const FORMS = { 1: [1], 2: [2], 3: [1, 2], 4: [2, 2], 5: [1, 2, 2] };
+  const FM_MAX = 5;
   const PITCH_SVG = `<svg class="fm-svg" viewBox="0 0 1000 640" preserveAspectRatio="none" aria-hidden="true">
       <defs><clipPath id="fmClip"><polygon points="150,20 850,20 980,620 20,620"/></clipPath></defs>
       <g clip-path="url(#fmClip)">${Array.from({ length: 8 }, (_, i) => `<rect x="0" y="${20 + i * 75}" width="1000" height="75" fill="${i % 2 ? "#2f8a3a" : "#37a043"}"/>`).join("")}</g>
@@ -1560,41 +1575,30 @@
       </g>
       <circle cx="500" cy="310" r="5" fill="rgba(255,255,255,.8)"/>
     </svg>`;
-  // 記事のタイトルを、選手名のように短くする（先頭の【】や、うしろの媒体名を取る）
-  const shortTitle = (t) => String(t || "").replace(/^【[^】]*】\s*/, "").replace(/(?:\s*―+\s*|\s+-\s+)[^―]{1,12}$/, "").trim();
-  // ユニフォーム（背番号なし）。キーパーだけ色を変える
-  const shirt = (gk) => `<svg class="fm-shirt" viewBox="0 0 60 60" aria-hidden="true">
-      <path d="M17 5 L24 5 Q30 11 36 5 L43 5 L57 15 L50 28 L45 25 L45 56 L15 56 L15 25 L10 28 L3 15 Z" fill="${gk ? "#e8577a" : "#1e3a8a"}"/>
-      <path d="M24 5 Q30 11 36 5" fill="none" stroke="#fff" stroke-width="2.5"/>
-      <path d="M15 25 L15 56 L22 56 L22 22 Z" fill="rgba(255,255,255,.12)"/>
-      <path d="M45 25 L45 56 L40 56 L40 23 Z" fill="rgba(0,0,0,.15)"/>
-      <circle cx="37" cy="17" r="2.6" fill="#d8b878"/>
-    </svg>`;
+  function fmCard(n, i, { reason = false } = {}) {
+    return `<button class="fm-card${i === 0 ? " cap" : ""}${isRead(n) ? " read" : ""}" data-open="${n.id}" style="--c:${color(n.genre)}; --i:${i}">
+        <span class="ph">${n.image ? `<img src="${esc(n.image)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}${n.kind === "video" ? '<span class="vid">▶ 動画</span>' : ""}${i === 0 ? '<i class="fm-c" title="キャプテン（いちばんのおすすめ）">C</i>' : ""}${isRead(n) ? '<i class="fm-read">✓ 読んだ</i>' : ""}</span>
+        <span class="tt"><small>${esc(genreLabel(n.genre))} ・ ${esc(n.publisher)}</small>${esc(n.title)}${reason && n.reason ? `<em><b>なぜ今日？</b>${esc(n.reason)}</em>` : ""}</span>
+      </button>`;
+  }
+  function formationHtml(items, opts = {}) {
+    const list = items.slice(0, FM_MAX);
+    let i = 0;
+    const rows = (FORMS[list.length] || []).map((count, r) =>
+      `<div class="fm-row r${r}">${list.slice(i, (i += count)).map((n, k) => fmCard(n, i - count + k, opts)).join("")}</div>`).join("");
+    return `<div class="fm-pitch n${list.length}">${PITCH_SVG}${rows}</div>`;
+  }
+
+  // 今日のスタメン：AI のおすすめ5本をフォーメーションで発表する
   let lineupDone = false;
-  function picksHtml(list = []) {
-    const head = (note) => `<div class="picks-h"><div class="lu-kicker">STARTING ELEVEN</div>
-        <h2>⚽ 今日のスタメン <span class="sub">AIのおすすめ5本＋注目の6本</span></h2><small>${note}</small></div>`;
-    if (!picks) return `<div class="picks lineup formation">${head("コーチ・マイクがメンバーを選んでいます…")}<div class="fm-pitch">${PITCH_SVG}</div></div>`;
+  function picksHtml() {
+    const head = (note) => `<div class="picks-h"><div class="lu-kicker">STARTING FIVE</div>
+        <h2>⚽ 今日のスタメン <span class="sub">AIのおすすめ5本</span></h2><small>${note}</small></div>`;
+    if (!picks) return `<div class="picks lineup">${head("コーチ・マイクがメンバーを選んでいます…")}<div class="fm-pitch n0">${PITCH_SVG}</div></div>`;
     if (!picks.items.length) return "";
-    // AI のおすすめ5本のあとに、いま注目の記事（Pick数・再生回数の多い順。最近のものを優先）を足して11本にする
-    const used = new Set(picks.items.map((n) => String(n.id)));
-    const recent = list.filter((n) => Date.now() - new Date(n.publishedAt) < 3 * 86400000);
-    const extra = (recent.length >= 6 ? recent : list).filter((n) => !used.has(String(n.id)))
-      .sort((a, b) => score(b) - score(a)).slice(0, FORMATION.length - picks.items.length);
-    const eleven = [...picks.items.map((n) => ({ ...n, ai: true })), ...extra].slice(0, FORMATION.length);
     const d = new Date(picks.createdAt);
-    const note = `${d.getMonth() + 1}月${d.getDate()}日 ${d.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })} にメンバー発表。前の5本は${picks.byAi ? "コーチ・マイク（AI）" : "注目度"}が選んだ、今日とくに読んでおきたい記事です`;
-    return `<div class="picks lineup formation${lineupDone ? "" : " lu-anim"}">${head(note)}
-      <div class="fm-pitch">${PITCH_SVG}${eleven.map((n, i) => {
-        const [x, y] = FORMATION[i];
-        const fx = 50 + (x - 50) * (0.73 + 0.27 * (y / 100)); // 奥（上）ほど、横をちぢめる
-        const gk = i === FORMATION.length - 1;
-        return `<button class="fm-p${n.ai ? " ai" : ""}${i === 0 ? " cap" : ""}" data-open="${n.id}" style="left:${fx.toFixed(1)}%; top:${y}%; --i:${i}"
-            title="${esc(n.title)}">${shirt(gk)}${i === 0 ? '<i class="fm-c" title="キャプテン">C</i>' : ""}
-          <span class="fm-name">${n.kind === "video" ? "▶ " : ""}${esc(shortTitle(n.title))}</span></button>`;
-      }).join("")}</div>
-      <div class="fm-legend"><span><i class="dot ai"></i>AIのおすすめ</span><span><i class="dot"></i>いま注目</span><span>タップで解説を開く</span></div>
-    </div>`;
+    const note = `${d.getMonth() + 1}月${d.getDate()}日 ${d.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })} に${picks.byAi ? "コーチ・マイク（AI）が、今日とくに読んでおきたい5本を選びました" : "注目度の高い順に選びました"}。上（前線）ほどおすすめです`;
+    return `<div class="picks lineup${lineupDone ? "" : " lu-anim"}">${head(note)}${formationHtml(picks.items, { reason: true })}</div>`;
   }
 
   // スタメン発表が画面に入ったら、1本ずつ登場させる（1回だけ。マイクがアナウンスする）
@@ -1823,7 +1827,7 @@
     const jumps = [
       item('data-go="rates"', "📈", "金利・ドル円"),
       item('data-go="search"', "🔍", "さがす・絞り込む"),
-      document.querySelector("#list .picks") ? item('data-go="picks"', "⚽", "今日のスタメン（フォーメーション）") : "",
+      document.querySelector("#list .picks") ? item('data-go="picks"', "⚽", "今日のスタメン（おすすめ5本）") : "",
       document.querySelector("#list .rank") ? item('data-go="rank"', "🏆", "得点ランキング（注目のトップ5）") : "",
       ...[...document.querySelectorAll("#list section[data-g]")].map((s) => {
         const g = genres.find((x) => x.id === s.dataset.g);
@@ -1970,7 +1974,7 @@
   }
 
   if (canHover) {
-    const PEEK_TARGET = ".card[data-id], .pk[data-open], .rk[data-open], .fm-p[data-open]";
+    const PEEK_TARGET = ".card[data-id], .pk[data-open], .rk[data-open], .fm-card[data-open]";
     $("list").addEventListener("mouseover", (ev) => {
       const card = ev.target.closest(PEEK_TARGET);
       if (!card || card === peekEl) return;
@@ -2753,12 +2757,14 @@
     const more = ev.target.closest("[data-more]");
     if (more) {
       const g = more.dataset.more;
-      const before = shown.get(g) || firstCount();
+      const sec0 = document.querySelector(`#list section[data-g="${g}"]`);
+      const fmN = Number(sec0?.dataset.fm || 0);
+      const before = Math.max(shown.get(g) || firstCount(), fmN);
       shown.set(g, before + 12);
       render();
       // 増えた分のカードをふわっと出す
       const sec = document.querySelector(`#list section[data-g="${g}"]`);
-      sec?.querySelectorAll(".card").forEach((c, i) => { if (i >= before) { c.classList.add("enter"); c.style.setProperty("--i", i - before); } });
+      sec?.querySelectorAll(".list .card").forEach((c, i) => { if (i + fmN >= before) { c.classList.add("enter"); c.style.setProperty("--i", i + fmN - before); } });
       return;
     }
     const star = ev.target.closest("[data-star]");
