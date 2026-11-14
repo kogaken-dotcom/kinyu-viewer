@@ -883,6 +883,60 @@
 
   .picks-h h2 .sub, .menu-h small { font-size: 12px; font-weight: 500; color: var(--muted); font-family: "Zen Kaku Gothic New", sans-serif; }
 
+  /* ===== サッカー場のデザイン：芝のピッチ・夜のスタジアム・電光掲示板 ===== */
+  :root { --grass1: #2f7d3b; --grass2: #2a7034; --chalk: rgba(255,255,255,.6); }
+  @media (prefers-color-scheme: dark) { :root { --grass1: #17401e; --grass2: #13371a; --chalk: rgba(255,255,255,.35); } }
+  /* 芝：刈りあとの縞もよう。記事の一覧の両はしにタッチライン（白線） */
+  body { background: repeating-linear-gradient(180deg, var(--grass1) 0 90px, var(--grass2) 90px 180px); }
+  main.wrap { box-shadow: inset 2px 0 0 var(--chalk), inset -2px 0 0 var(--chalk); padding-top: 4px; }
+  /* 芝の上の文字は白く（読みやすいように影を付ける） */
+  #list section > h2, #list .spot > div > h2, .empty { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.45); }
+  #list section > h2 .n, #list .spot > div > h2 small { color: rgba(255,255,255,.82); }
+  section > h2::after { height: 2px; background: repeating-linear-gradient(90deg, var(--chalk) 0 7px, transparent 7px 14px); }
+  /* 上の帯：夜のスタジアム（左右の照明と、下にスタンドの観客） */
+  header .band { background:
+      radial-gradient(420px 200px at 6% -12%, rgba(255,248,214,.3), transparent 62%),
+      radial-gradient(420px 200px at 94% -12%, rgba(255,248,214,.3), transparent 62%),
+      linear-gradient(165deg, #0b1d33 0%, #13294a 60%, #0f2742 100%); }
+  header .band::after { inset: auto 0 0 0; height: 30px;
+    background: radial-gradient(circle at 4px 5px, rgba(255,255,255,.16) 1.6px, transparent 2px) 0 0 / 9px 9px;
+    -webkit-mask-image: linear-gradient(0deg, #000, transparent); mask-image: linear-gradient(0deg, #000, transparent); }
+  /* 金利の欄：スタジアムの電光掲示板 */
+  .rate-card { background: #0a0f17; backdrop-filter: none; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), 0 0 0 3px rgba(28,37,51,.9); }
+  .rate-card .ri .v, .spread .v { color: #ffd76a; text-shadow: 0 0 8px rgba(255,200,80,.45); }
+  .rate-card .ri .k, .spread .k, .spread .s { color: rgba(255,255,255,.72); }
+  .ri svg polyline { stroke: #ffd76a; } .ri svg circle { fill: #ffd76a; }
+
+  /* ===== マイクに聞く＝ロッカールーム（開くとロッカーの扉が左右に開く） ===== */
+  .c-head { background: linear-gradient(180deg, #3d2b1b, #2a1d12); border-bottom: 3px solid #b08d57; }
+  .c-head .room { display: inline-block; vertical-align: 2px; margin-left: 6px; padding: 1px 7px; border-radius: 4px; font-size: 10px; font-weight: 800;
+    letter-spacing: .12em; color: #2a1d12; background: #d8b878; }
+  .c-log { background:
+      linear-gradient(180deg, rgba(246,244,239,.9), rgba(246,244,239,.95)),
+      repeating-linear-gradient(90deg, #7f8b99 0 2px, #c3cbd5 2px 66px); }
+  @media (prefers-color-scheme: dark) {
+    .c-log { background: linear-gradient(180deg, rgba(11,17,25,.88), rgba(11,17,25,.94)), repeating-linear-gradient(90deg, #3b4553 0 2px, #222a35 2px 66px); }
+  }
+  .c-door { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; pointer-events: none; visibility: hidden; }
+  .c-door i { position: absolute; top: 0; bottom: 0; width: 50%;
+    background:
+      repeating-linear-gradient(180deg, transparent 0 7px, rgba(0,0,0,.28) 7px 9px) 50% 40px / 46% 70px no-repeat,
+      linear-gradient(90deg, #8f9aa6, #b9c2cc 40%, #a3adb8); box-shadow: inset 0 0 0 2px #5b6672; }
+  .c-door i.l { left: 0; } .c-door i.r { right: 0; }
+  .c-door i::after { content: ""; position: absolute; top: 46%; width: 6px; height: 34px; border-radius: 3px; background: #d8b878; }
+  .c-door i.l::after { right: 10px; } .c-door i.r::after { left: 10px; }
+  .c-door span { position: relative; z-index: 1; padding: 9px 16px; border-radius: 999px; font-size: 13px; font-weight: 800; color: #d8b878; background: #0b1d33;
+    box-shadow: 0 8px 20px -8px rgba(0,0,0,.6); }
+  .chat.show .c-door { animation: doorShow 1.35s steps(1) forwards; }
+  .chat.show .c-door i.l { animation: doorL .8s .45s cubic-bezier(.6,0,.3,1) forwards; }
+  .chat.show .c-door i.r { animation: doorR .8s .45s cubic-bezier(.6,0,.3,1) forwards; }
+  .chat.show .c-door span { animation: doorTxt .5s .55s forwards; }
+  @keyframes doorShow { 0% { visibility: visible; } 100% { visibility: hidden; } }
+  @keyframes doorL { to { transform: translateX(-102%); } }
+  @keyframes doorR { to { transform: translateX(102%); } }
+  @keyframes doorTxt { to { opacity: 0; transform: scale(.9); } }
+  @media (prefers-reduced-motion: reduce) { .c-door { display: none; } }
+
   /* ===== カーソルを合わせたときの記事のポップ（PC だけ） ===== */
   .peek { position: fixed; z-index: 19; width: min(340px, calc(100vw - 20px)); padding: 14px 16px 12px; border-radius: 16px;
     background: var(--card); color: var(--text); pointer-events: none; overflow: hidden;
@@ -964,13 +1018,14 @@
 <button class="menu-fab" id="menuFab" aria-label="メニューを開く" aria-expanded="false" aria-controls="menu">📋 作戦ボード</button>
 <nav class="menu" id="menu" aria-label="メニュー"></nav>
 <div class="peek" id="peek" role="tooltip"></div>
-<button class="chat-fab" id="chatFab" aria-label="コーチ・マイクに聞く"><span class="say">Hey！お金のこと、なんでも聞いてくれ！</span><span id="fabOwl"></span></button>
+<button class="chat-fab" id="chatFab" aria-label="ロッカールームでコーチ・マイクに聞く"><span class="say">Hey！お金のこと、なんでも聞いてくれ！</span><span id="fabOwl"></span></button>
 <div class="mike-fx" id="mikeFx" aria-hidden="true"></div>
-<div class="chat" id="chat" role="dialog" aria-label="AIアシスタント">
+<div class="chat" id="chat" role="dialog" aria-label="ロッカールーム（コーチ・マイクに聞く）">
+  <div class="c-door" aria-hidden="true"><i class="l"></i><i class="r"></i><span>🚪 ロッカールームへ移動中…</span></div>
   <div class="c-head">
     <span class="av" id="chatAv"></span>
-    <div><b>コーチ・マイク</b><small>元サッカー選手の「お金のコーチ」。作戦会議で質問に答えるぜ！</small></div>
-    <button class="x" id="chatClose" aria-label="閉じる">×</button>
+    <div><b>コーチ・マイク<span class="room">LOCKER ROOM</span></b><small>ロッカールームで作戦会議。お金のこと、なんでも聞いてくれ！</small></div>
+    <button class="x" id="chatClose" aria-label="ピッチに戻る" title="ピッチに戻る">×</button>
   </div>
   <div class="c-log" id="chatLog"></div>
   <form class="c-form" id="chatForm">
@@ -1510,7 +1565,7 @@
     const last = [...thread].reverse().find((m) => m.role === "assistant");
     const sugs = thread.length ? last?.followups || [] : ASK_STARTERS;
     return `<div class="ask">
-      <div class="ask-top">${mascot("bob")}<div><h3 class="ask-h">コーチ・マイクに深掘り質問</h3><p>この${n.kind === "video" ? "動画" : "記事"}について、なんでも聞いてくれ！ナイス質問、待ってるぜ！</p></div></div>
+      <div class="ask-top">${mascot("bob")}<div><h3 class="ask-h">🚪 ロッカールームで深掘り質問</h3><p>この${n.kind === "video" ? "動画" : "記事"}について、なんでも聞いてくれ！ナイス質問、待ってるぜ！</p></div></div>
       ${thread.length ? `<div class="ask-log">${thread.map((m) => m.role === "user"
         ? `<div class="q-me">${esc(m.content)}</div>`
         : `<div class="a-bot${m.error ? " err" : ""}">${mascot()}<div>${esc(m.content)}</div></div>`).join("")}
@@ -1670,7 +1725,7 @@
       <div class="mg"><div class="mt">見るものを切りかえ</div>${cats}
         ${item(`data-view="saved" aria-pressed="${view === "saved"}"`, "★", "保存した記事", savedItems.length ? `<span class="n">${savedItems.length}件</span>` : "")}</div>
       <div class="mg"><div class="mt">そのほか</div>
-        ${item("data-menu-chat", "💬", "コーチ・マイクに聞く")}
+        ${item("data-menu-chat", "🚪", "ロッカールームでマイクに聞く")}
         ${item("data-menu-top", "↑", "いちばん上へ")}</div>`;
   }
 
@@ -1913,7 +1968,7 @@
     ["header", "ヘディングで競り勝つ！金利のことなら任せてくれ！"],
     ["throw", "スローイン！気になるニュースにパスを回そうぜ！"],
     ["spin", "マルセイユルーレット！お金の話もくるっと解決だ！"],
-    ["tilt", "ピッ！作戦会議（チャット）はいつでもOKだぜ！"],
+    ["tilt", "ピッ！ロッカールームで作戦会議しようぜ！"],
     ["wave", "Hey！今日の作戦ボードは左下だぜ！"],
   ];
   function idleLoop() {
@@ -2347,7 +2402,7 @@
     $("chat").classList.add("show");
     $("chatFab").classList.add("hidden");
     if (!$("chatLog").children.length) {
-      chatAdd(`<div class="row-bot">${mascot()}<div class="msg bot">Hey！コーチ・マイクだ！ お金や経済のこと、なんでも質問してくれ。わかりやすく答えて、関係するニュースやYouTube動画も探してくるぜ。Let's go！</div></div>
+      chatAdd(`<div class="row-bot">${mascot()}<div class="msg bot">Hey！ロッカールームへようこそ！コーチ・マイクだ。お金や経済のこと、なんでも質問してくれ。わかりやすく答えて、関係するニュースやYouTube動画も探してくるぜ。Let's go！</div></div>
         <div class="c-sugs">${SUGGEST.map((q) => `<button data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div>`);
     }
     setTimeout(() => $("chatInput").focus(), 300);
