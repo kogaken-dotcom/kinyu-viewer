@@ -907,34 +907,77 @@
   .rate-card .ri .k, .spread .k, .spread .s { color: rgba(255,255,255,.72); }
   .ri svg polyline { stroke: #ffd76a; } .ri svg circle { fill: #ffd76a; }
 
-  /* ===== マイクに聞く＝ロッカールーム（開くとロッカーの扉が左右に開く） ===== */
-  .c-head { background: linear-gradient(180deg, #3d2b1b, #2a1d12); border-bottom: 3px solid #b08d57; }
-  .c-head .room { display: inline-block; vertical-align: 2px; margin-left: 6px; padding: 1px 7px; border-radius: 4px; font-size: 10px; font-weight: 800;
-    letter-spacing: .12em; color: #2a1d12; background: #d8b878; }
-  .c-log { background:
-      linear-gradient(180deg, rgba(246,244,239,.9), rgba(246,244,239,.95)),
-      repeating-linear-gradient(90deg, #7f8b99 0 2px, #c3cbd5 2px 66px); }
-  @media (prefers-color-scheme: dark) {
-    .c-log { background: linear-gradient(180deg, rgba(11,17,25,.88), rgba(11,17,25,.94)), repeating-linear-gradient(90deg, #3b4553 0 2px, #222a35 2px 66px); }
-  }
-  .c-door { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; pointer-events: none; visibility: hidden; }
-  .c-door i { position: absolute; top: 0; bottom: 0; width: 50%;
-    background:
-      repeating-linear-gradient(180deg, transparent 0 7px, rgba(0,0,0,.28) 7px 9px) 50% 40px / 46% 70px no-repeat,
-      linear-gradient(90deg, #8f9aa6, #b9c2cc 40%, #a3adb8); box-shadow: inset 0 0 0 2px #5b6672; }
-  .c-door i.l { left: 0; } .c-door i.r { right: 0; }
-  .c-door i::after { content: ""; position: absolute; top: 46%; width: 6px; height: 34px; border-radius: 3px; background: #d8b878; }
-  .c-door i.l::after { right: 10px; } .c-door i.r::after { left: 10px; }
-  .c-door span { position: relative; z-index: 1; padding: 9px 16px; border-radius: 999px; font-size: 13px; font-weight: 800; color: #d8b878; background: #0b1d33;
-    box-shadow: 0 8px 20px -8px rgba(0,0,0,.6); }
-  .chat.show .c-door { animation: doorShow 1.35s steps(1) forwards; }
-  .chat.show .c-door i.l { animation: doorL .8s .45s cubic-bezier(.6,0,.3,1) forwards; }
-  .chat.show .c-door i.r { animation: doorR .8s .45s cubic-bezier(.6,0,.3,1) forwards; }
-  .chat.show .c-door span { animation: doorTxt .5s .55s forwards; }
+  /* ===== マイクに聞く＝ロッカールーム：本物のロッカーのように ===== */
+  /* 上の看板：ロッカーの上の棚（金属のすき間）と、真ちゅうの名札 */
+  .c-head { background: repeating-linear-gradient(180deg, transparent 0 5px, rgba(0,0,0,.18) 5px 7px) 0 0 / 100% 14px no-repeat,
+      linear-gradient(180deg, #5b6672, #3f4954); border-bottom: 3px solid #2b333d; box-shadow: inset 0 1px 0 rgba(255,255,255,.25); }
+  .c-head .room { display: inline-block; vertical-align: 2px; margin-left: 6px; padding: 1px 8px; border-radius: 3px; font-size: 10px; font-weight: 800;
+    letter-spacing: .12em; color: #3a2a10; background: linear-gradient(#ecd496, #b08d57); box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 1px 2px rgba(0,0,0,.4); }
+  /* ロッカーの中：穴のあいた鉄の壁、フック、奥に背番号10のユニフォーム */
+  .c-log { position: relative; background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 130'%3E%3Cpath d='M44 10 Q60 22 76 10' fill='none' stroke='%23cbd5e1' stroke-width='3'/%3E%3Cpath d='M60 0 v10' stroke='%23cbd5e1' stroke-width='3'/%3E%3Cpath d='M34 18 L48 14 Q60 24 72 14 L86 18 L112 38 L100 58 L90 52 L90 126 L30 126 L30 52 L20 58 L8 38 Z' fill='%23c8102e'/%3E%3Ctext x='60' y='96' font-family='Georgia,serif' font-size='40' font-weight='700' fill='white' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E") right 18px top 14px / 64px auto no-repeat,
+      radial-gradient(circle, rgba(0,0,0,.28) 1.2px, transparent 1.6px) 0 0 / 11px 11px,
+      linear-gradient(180deg, #46515f, #343d49 60%, #2c343e); }
+  .c-log .row-bot .msg, .c-log .msg.bot { position: relative; background: #fbfaf7; color: #1d1b2f; border: 0; box-shadow: 0 6px 14px -6px rgba(0,0,0,.55); }
+  /* マイクのメッセージは、マグネットで貼ったメモ */
+  .c-log .row-bot .msg::before { content: ""; position: absolute; top: -6px; left: 16px; width: 13px; height: 13px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ff9b9b, #c8102e 60%, #8a0b20); box-shadow: 0 2px 3px rgba(0,0,0,.45); }
+  /* あなたのメッセージは、黄色いふせん（テープ付き） */
+  .c-log .msg.me { position: relative; background: #fde68a; color: #1f2937; border-radius: 3px; transform: rotate(-1deg); box-shadow: 0 6px 12px -6px rgba(0,0,0,.6); }
+  .c-log .msg.me::before { content: ""; position: absolute; top: -7px; left: 50%; width: 42px; height: 14px; transform: translateX(-50%) rotate(2deg);
+    background: rgba(255,255,255,.55); box-shadow: 0 1px 2px rgba(0,0,0,.15); }
+  /* 質問の候補は、ラベルライターのテープ */
+  .c-log .c-sugs button { border: 0; border-radius: 3px; padding: 6px 10px; font-family: ui-monospace, Consolas, monospace; font-size: 12px; letter-spacing: .03em;
+    color: #f9fafb; background: #111827; box-shadow: 0 3px 6px -2px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.12); }
+  .c-log .c-sugs button:hover { background: #1f2937; color: #fde68a; }
+  .c-log .c-rel { color: rgba(255,255,255,.88); text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+  /* 入力欄は、ロッカールームの木のベンチ */
+  .chat .c-form { border-top: 0; background: repeating-linear-gradient(90deg, transparent 0 140px, rgba(0,0,0,.18) 140px 142px),
+      linear-gradient(180deg, #a5743f, #8a5e33); box-shadow: inset 0 2px 0 rgba(255,255,255,.18); }
+
+  /* ロッカーの扉：南京錠がはずれて「ガチャッ」→ 扉が手前に開く。閉じるときは「バタン」 */
+  .chat { perspective: 1100px; }
+  .c-door { position: absolute; inset: 0; z-index: 6; pointer-events: none; visibility: hidden; border-radius: inherit; }
+  .door { position: absolute; inset: 0; border-radius: inherit; transform-origin: left center; backface-visibility: hidden;
+    background: linear-gradient(90deg, #8a95a2, #c6ced7 32%, #aeb7c1 68%, #8a95a2); box-shadow: inset 0 0 0 3px #5b6672, inset 8px 0 0 #6f7a86; }
+  .door .vents { position: absolute; left: 26%; right: 26%; top: 7%; height: 64px; border-radius: 4px;
+    background: repeating-linear-gradient(180deg, #4b5563 0 5px, transparent 5px 12px); opacity: .55; }
+  .door .vents.low { top: auto; bottom: 7%; }
+  .door .plate { position: absolute; top: 30%; left: 50%; transform: translateX(-50%); padding: 7px 16px; border-radius: 4px; text-align: center;
+    font-family: "Cormorant Garamond", serif; font-size: 15px; font-weight: 700; letter-spacing: .16em; color: #3a2a10; white-space: nowrap;
+    background: linear-gradient(#ecd496, #b08d57); box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 5px rgba(0,0,0,.4); }
+  .door .plate small { display: block; font-size: 10px; letter-spacing: .2em; }
+  .door .handle { position: absolute; right: 22px; top: calc(50% - 40px); width: 10px; height: 80px; border-radius: 6px;
+    background: linear-gradient(90deg, #6b7280, #e5e7eb, #6b7280); box-shadow: 0 2px 4px rgba(0,0,0,.4); }
+  .door .lock { position: absolute; right: 38px; top: calc(50% + 22px); width: 30px; height: 34px; font-size: 26px; line-height: 34px; text-align: center; transform-origin: top center; }
+  .door .lock b { position: absolute; inset: 0; font-weight: 400; }
+  .door .lock .open { opacity: 0; }
+  .c-door .sfx { position: absolute; right: 30px; top: calc(50% - 70px); font-size: 22px; font-weight: 900; color: #d8b878; opacity: 0;
+    text-shadow: 0 2px 0 #0b1d33, 0 0 10px rgba(0,0,0,.6); }
+  .c-door .shut-sfx { right: auto; left: 50%; top: 45%; transform: translateX(-50%); font-size: 26px; }
+  /* 開くとき */
+  .chat.show .c-door { animation: doorShow 1.5s steps(1) forwards; }
+  .chat.show .door .lock { animation: lockJiggle .45s .1s ease-in-out; }
+  .chat.show .door .lock .shut { animation: fadeOut .1s .45s forwards; }
+  .chat.show .door .lock .open { animation: fadeIn .1s .45s forwards; }
+  .chat.show .c-door .open-sfx { animation: sfxPop .7s .45s ease-out forwards; }
+  .chat.show .door { animation: doorOpen .8s .6s cubic-bezier(.55,0,.3,1) forwards; }
+  .chat.show .c-log { animation: lightsOn .6s 1.2s steps(1); }
   @keyframes doorShow { 0% { visibility: visible; } 100% { visibility: hidden; } }
-  @keyframes doorL { to { transform: translateX(-102%); } }
-  @keyframes doorR { to { transform: translateX(102%); } }
-  @keyframes doorTxt { to { opacity: 0; transform: scale(.9); } }
+  @keyframes lockJiggle { 25% { transform: rotate(-14deg); } 50% { transform: rotate(10deg); } 75% { transform: rotate(-6deg) translateY(3px); } }
+  @keyframes fadeOut { to { opacity: 0; } }
+  @keyframes fadeIn { to { opacity: 1; } }
+  @keyframes sfxPop { 0% { opacity: 0; transform: scale(.5) rotate(-8deg); } 30% { opacity: 1; transform: scale(1.15) rotate(3deg); } 100% { opacity: 0; transform: translateY(-14px); } }
+  @keyframes doorOpen { 0% { transform: none; } 12% { transform: rotateY(5deg); } 100% { transform: rotateY(-112deg); } }
+  /* 中の電気が、パチパチッとついてから明るくなる */
+  @keyframes lightsOn { 0% { filter: brightness(.45); } 20% { filter: brightness(1.05); } 35% { filter: brightness(.6); } 55% { filter: brightness(1); } }
+  /* 閉じるとき */
+  .chat.closing .c-door { visibility: visible; animation: none; }
+  .chat.closing .door { animation: doorShut .4s cubic-bezier(.6,0,.8,.3) forwards; }
+  .chat.closing .c-door .shut-sfx { animation: sfxPop .45s .32s ease-out forwards; }
+  .chat.closing { animation: lockerShake .2s .36s; }
+  @keyframes doorShut { from { transform: rotateY(-112deg); } to { transform: none; } }
+  @keyframes lockerShake { 25% { translate: -3px 0; } 50% { translate: 3px 0; } 75% { translate: -2px 0; } }
   @media (prefers-reduced-motion: reduce) { .c-door { display: none; } }
 
   /* ===== フォーメーション：ピッチの上に、記事（写真＋タイトル）が主役で並ぶ ===== */
@@ -973,7 +1016,7 @@
     font-size: 10px; font-style: normal; font-weight: 900; color: #0b1d33; background: #d8b878; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
   .fm-read { position: absolute; left: 6px; bottom: 6px; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-style: normal; font-weight: 700; background: rgba(5,150,105,.9); }
   .fm-card.read .ph img { filter: saturate(.6) brightness(.85); }
-  /* 今日のスタメンの発表：前から順に、ポンッと出てくる */
+  /* おすすめ5本の発表：前から順に、ポンッと出てくる */
   .lineup.lu-anim .fm-card { opacity: 0; }
   .lineup.lu-anim.go .fm-card { animation: fmIn .55s cubic-bezier(.2,.9,.25,1.25) forwards; animation-delay: calc(var(--i) * .28s + .2s); }
   @keyframes fmIn { 0% { opacity: 0; transform: translateY(26px) scale(.6); } 100% { opacity: 1; transform: none; } }
@@ -1077,7 +1120,11 @@
 <button class="chat-fab" id="chatFab" aria-label="ロッカールームでコーチ・マイクに聞く"><span class="say">Hey！お金のこと、なんでも聞いてくれ！</span><span id="fabOwl"></span></button>
 <div class="mike-fx" id="mikeFx" aria-hidden="true"></div>
 <div class="chat" id="chat" role="dialog" aria-label="ロッカールーム（コーチ・マイクに聞く）">
-  <div class="c-door" aria-hidden="true"><i class="l"></i><i class="r"></i><span>🚪 ロッカールームへ移動中…</span></div>
+  <div class="c-door" aria-hidden="true">
+    <div class="door"><span class="vents"></span><span class="plate">COACH MIKE<small>LOCKER No.10</small></span>
+      <span class="handle"></span><span class="lock"><b class="shut">🔒</b><b class="open">🔓</b></span><span class="vents low"></span></div>
+    <span class="sfx open-sfx">ガチャッ！</span><span class="sfx shut-sfx">バタン！</span>
+  </div>
   <div class="c-head">
     <span class="av" id="chatAv"></span>
     <div><b>コーチ・マイク<span class="room">LOCKER ROOM</span></b><small>ロッカールームで作戦会議。お金のこと、なんでも聞いてくれ！</small></div>
@@ -1589,11 +1636,10 @@
     return `<div class="fm-pitch n${list.length}">${PITCH_SVG}${rows}</div>`;
   }
 
-  // 今日のスタメン：AI のおすすめ5本をフォーメーションで発表する
+  // AI のおすすめ5本を、フォーメーションで発表する
   let lineupDone = false;
   function picksHtml() {
-    const head = (note) => `<div class="picks-h"><div class="lu-kicker">STARTING FIVE</div>
-        <h2>⚽ 今日のスタメン <span class="sub">AIのおすすめ5本</span></h2><small>${note}</small></div>`;
+    const head = (note) => `<div class="picks-h"><h2>⚽ AIのおすすめ5本</h2><small>${note}</small></div>`;
     if (!picks) return `<div class="picks lineup">${head("コーチ・マイクがメンバーを選んでいます…")}<div class="fm-pitch n0">${PITCH_SVG}</div></div>`;
     if (!picks.items.length) return "";
     const d = new Date(picks.createdAt);
@@ -1611,7 +1657,7 @@
       // 描き直されていることがあるので、いま画面にあるほうに付ける
       document.querySelector("#list .lineup.lu-anim")?.classList.add("go");
       mikeAct("wave");
-      mikeSay("本日のスターティングメンバーを発表するぜ！", 3800);
+      mikeSay("今日のおすすめ5本、発表するぜ！", 3800);
     };
     // 念のため：画面に入った合図が来なくても、4秒たったら必ず表示する（記事が見えないままにならないように）
     setTimeout(go, 4000);
@@ -1827,7 +1873,7 @@
     const jumps = [
       item('data-go="rates"', "📈", "金利・ドル円"),
       item('data-go="search"', "🔍", "さがす・絞り込む"),
-      document.querySelector("#list .picks") ? item('data-go="picks"', "⚽", "今日のスタメン（おすすめ5本）") : "",
+      document.querySelector("#list .picks") ? item('data-go="picks"', "⚽", "AIのおすすめ5本") : "",
       document.querySelector("#list .rank") ? item('data-go="rank"', "🏆", "得点ランキング（注目のトップ5）") : "",
       ...[...document.querySelectorAll("#list section[data-g]")].map((s) => {
         const g = genres.find((x) => x.id === s.dataset.g);
@@ -2078,7 +2124,7 @@
   // 何もしていないときの動き（15〜25秒に1回）
   const IDLE = [
     ["stance", "リフティング中！今日もキックオフだぜ！"],
-    ["run", "ドリブルで突破！今日のスタメン、もう見たか？"],
+    ["run", "ドリブルで突破！今日のおすすめ5本、もう見たか？"],
     ["kick", "ナイスシュート！質問はいつでも受けるぜ！"],
     ["catch", "ナイストラップ！記事を1本読んでいこうぜ！"],
     ["header", "ヘディングで競り勝つ！金利のことなら任せてくれ！"],
@@ -2524,9 +2570,14 @@
     setTimeout(() => $("chatInput").focus(), 300);
   }
 
+  // 閉じるときは、ロッカーの扉がバタンと閉まってから消える
   function closeChat() {
-    $("chat").classList.remove("show");
-    $("chatFab").classList.remove("hidden");
+    const c = $("chat");
+    if (!c.classList.contains("show") || c.classList.contains("closing")) return;
+    const done = () => { c.classList.remove("show", "closing"); $("chatFab").classList.remove("hidden"); };
+    if (calm) return done();
+    c.classList.add("closing");
+    setTimeout(done, 520);
   }
 
   function resultHtml(n, i) {
