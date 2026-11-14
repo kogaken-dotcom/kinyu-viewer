@@ -796,12 +796,18 @@
   @keyframes fxring { from { transform: translate(-50%, -50%) scale(.6); opacity: .9; } to { transform: translate(-50%, -50%) scale(2); opacity: 0; } }
   .mike-fx i.word { font-size: 17px; color: #c8102e; text-shadow: 0 0 3px #fff, 0 0 6px #fff, 0 2px 0 #fff; }
   .c-head .av.pop { animation: mhop .22s ease-in-out 4 alternate; }
-  /* 3Dのマイク：回転は3Dの中で行うので、画面上の回転は跳ねるだけにする。しゃべっている絵は小さく跳ねる */
-  #fabOwl canvas.mike3d { display: block; width: 68px; height: 68px; margin-top: -6px; }
-  #fabOwl.is3d.act-spin { animation: mhop .3s ease-in-out 2 alternate; }
-  img.mascot { object-fit: contain; }
-  .logo img.mascot { width: 100%; height: 100%; }
-  img.mascot.talk { animation: mhop .3s ease-in-out infinite alternate; }
+  /* 右下のマイクは、丸い枠に入れず全身で立たせる（足もとに影） */
+  .chat-fab { width: 64px; height: 107px; padding: 0; border-radius: 0; background: none; box-shadow: none; overflow: visible; }
+  .chat-fab:hover { box-shadow: none; }
+  .chat-fab::after { content: ""; position: absolute; left: 50%; bottom: -3px; width: 46px; height: 9px; transform: translateX(-50%); z-index: -1;
+    border-radius: 50%; background: radial-gradient(closest-side, rgba(15,39,66,.38), transparent); }
+  .chat-fab .mascot.full { width: 64px; height: 107px; filter: drop-shadow(0 3px 4px rgba(15,39,66,.28)); }
+  .chat-fab .say { bottom: 114px; }
+  .mike-fx { width: 64px; height: 107px; }
+  @media (max-width: 560px) {
+    .chat-fab, .chat-fab .mascot.full, .mike-fx { width: 54px; height: 90px; }
+    .chat-fab .say { bottom: 98px; }
+  }
 
   /* ===== カーソルを合わせたときの記事のポップ（PC だけ） ===== */
   .peek { position: fixed; z-index: 19; width: min(340px, calc(100vw - 20px)); padding: 14px 16px 12px; border-radius: 16px;
@@ -880,254 +886,6 @@
 <div class="phone" id="phone" role="dialog" aria-label="スマホで見る"></div>
 <div class="phone story" id="story" role="dialog" aria-label="ストーリー用の画像"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script>
-// ===== コーチ・マイクの3Dモデル（three.js で、球や筒を組み合わせて作る） =====
-// three.js はあとから読み込む。読み込めたら右下のマイクを3Dにし、小さいアイコンは3Dの絵（画像）に差しかえる
-window.Mike3D = (() => {
-  const C = {
-    skin: 0xf8d3b0, hand: 0xf2c29b, red: 0xc8102e, hair: 0xf6c343, band: 0x1d4ed8, brow: 0xb7862b,
-    eye: 0x1d1b2f, mouth: 0x7a1f2b, tongue: 0xff8fa3, white: 0xffffff, metal: 0xcbd5e1, cord: 0xfacc15,
-  };
-
-  function build(THREE) {
-    const mat = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0, ...o });
-    const mesh = (geo, m, x = 0, y = 0, z = 0) => {
-      const me = new THREE.Mesh(geo, m);
-      me.position.set(x, y, z);
-      return me;
-    };
-    const root = new THREE.Group(); // 全体（回る）
-    const body = new THREE.Group(); // 胴（呼吸する）。頭を大きく見せるため、胴は少し小さくする
-    body.scale.setScalar(0.84);
-    root.add(body);
-
-    // 胴：赤いユニフォーム
-    const red = mat(C.red, { roughness: 0.62 });
-    body.add(mesh(new THREE.CylinderGeometry(0.92, 1.18, 1.3, 40), red, 0, -1.45, 0));
-    const shoulders = mesh(new THREE.SphereGeometry(1, 40, 20), red, 0, -0.85, 0);
-    shoulders.scale.set(1.08, 0.52, 0.8);
-    body.add(shoulders);
-    // 白い V ネックと、胸の白いライン
-    const v = new THREE.Shape();
-    v.moveTo(-0.3, 0);
-    v.lineTo(0.3, 0);
-    v.lineTo(0, -0.42);
-    v.closePath();
-    const vneck = mesh(new THREE.ShapeGeometry(v), mat(C.white), 0, -0.6, 0.72);
-    vneck.rotation.x = -0.45;
-    body.add(vneck);
-    for (const s of [-1, 1]) {
-      const stripe = mesh(new THREE.BoxGeometry(0.42, 0.07, 0.04), mat(C.white), s * 0.62, -1.42, 1.0);
-      stripe.rotation.y = s * 0.45;
-      body.add(stripe);
-    }
-    // 首と笛
-    body.add(mesh(new THREE.CylinderGeometry(0.3, 0.34, 0.45, 28), mat(C.skin, { roughness: 0.62 }), 0, -0.5, 0));
-    const cord = mesh(new THREE.TorusGeometry(0.42, 0.022, 8, 40, Math.PI), mat(C.cord), 0, -0.66, 0.42);
-    cord.rotation.set(Math.PI / 2 + 0.75, 0, Math.PI);
-    body.add(cord);
-    body.add(mesh(new THREE.BoxGeometry(0.28, 0.15, 0.15), mat(C.metal, { metalness: 0.55, roughness: 0.3 }), 0.12, -1.0, 0.86));
-
-    // 腕：肩を軸に回す（ガッツポーズ・手をふる・投げる）
-    const arm = (s) => {
-      const g = new THREE.Group();
-      g.position.set(s * 0.98, -0.88, 0.05);
-      g.add(mesh(new THREE.CapsuleGeometry(0.2, 0.55, 8, 20), red, 0, 0.42, 0));
-      const cuff = mesh(new THREE.TorusGeometry(0.205, 0.035, 8, 24), mat(C.white), 0, 0.72, 0); // 袖口の白いライン
-      cuff.rotation.x = Math.PI / 2;
-      g.add(cuff);
-      g.add(mesh(new THREE.SphereGeometry(0.26, 24, 16), mat(C.hand, { roughness: 0.65 }), 0, 0.95, 0));
-      g.rotation.z = s * -0.55;
-      body.add(g);
-      return g;
-    };
-    const armL = arm(-1);
-    const armR = arm(1);
-
-    // 頭
-    const head = new THREE.Group();
-    head.position.set(0, 0.48, 0);
-    root.add(head);
-    const skin = mat(C.skin, { roughness: 0.62 });
-    const skull = mesh(new THREE.SphereGeometry(1, 56, 40), skin);
-    skull.scale.set(1, 1.04, 0.94);
-    head.add(skull);
-    for (const s of [-1, 1]) head.add(mesh(new THREE.SphereGeometry(0.21, 20, 14), skin, s * 0.98, -0.02, -0.02));
-
-    // 髪：頭の上を覆うキャップと、ツンツンの毛
-    const hairM = mat(C.hair, { roughness: 0.48 });
-    const cap = mesh(new THREE.SphereGeometry(1.05, 56, 28, 0, Math.PI * 2, 0, Math.PI * 0.42), hairM, 0, 0.03, -0.03);
-    cap.scale.set(1, 1.04, 0.96);
-    head.add(cap);
-    const up = new THREE.Vector3(0, 1, 0);
-    for (let i = 0; i < 11; i++) {
-      const a = (i / 10 - 0.5) * 1.9;
-      const dir = new THREE.Vector3(Math.sin(a) * 0.8, 0.95, (i % 2 ? 0.18 : -0.22)).normalize();
-      const spike = mesh(new THREE.ConeGeometry(0.21, 0.6, 14), hairM);
-      spike.position.copy(dir.clone().multiplyScalar(0.98));
-      spike.quaternion.setFromUnitVectors(up, dir);
-      head.add(spike);
-    }
-
-    // 青いハチマキと白い星
-    const band = mesh(new THREE.TorusGeometry(1.0, 0.12, 18, 72), mat(C.band, { roughness: 0.45 }), 0, 0.34, 0);
-    band.rotation.x = Math.PI / 2;
-    band.scale.set(1.02, 0.94, 1);
-    head.add(band);
-    const star = new THREE.Shape();
-    for (let i = 0; i < 10; i++) {
-      const r = i % 2 ? 0.075 : 0.17, a = Math.PI / 2 + (i * Math.PI) / 5;
-      (i ? star.lineTo : star.moveTo).call(star, Math.cos(a) * r, Math.sin(a) * r);
-    }
-    star.closePath();
-    head.add(mesh(new THREE.ExtrudeGeometry(star, { depth: 0.05, bevelEnabled: false }), mat(C.white, { roughness: 0.3 }), 0, 0.34, 1.02));
-
-    // 目（まばたきする）・まゆ・ほっぺ
-    const eyes = [];
-    for (const s of [-1, 1]) {
-      const g = new THREE.Group();
-      g.position.set(s * 0.34, 0.02, 0.86);
-      const ball = mesh(new THREE.SphereGeometry(0.13, 20, 16), mat(C.eye, { roughness: 0.25 }));
-      ball.scale.set(1, 1.25, 0.6);
-      g.add(ball);
-      g.add(mesh(new THREE.SphereGeometry(0.042, 12, 8), mat(C.white, { roughness: 0.2, emissive: 0xffffff, emissiveIntensity: 0.4 }), 0.045, 0.06, 0.07));
-      head.add(g);
-      eyes.push(g);
-      const brow = mesh(new THREE.BoxGeometry(0.34, 0.075, 0.08), mat(C.brow), s * 0.37, 0.28, 0.85);
-      brow.rotation.z = s * -0.14;
-      head.add(brow);
-      const cheek = mesh(new THREE.CircleGeometry(0.15, 24), mat(C.tongue, { transparent: true, opacity: 0.45 }), s * 0.58, -0.2, 0.77);
-      cheek.lookAt(cheek.position.clone().multiplyScalar(3));
-      head.add(cheek);
-    }
-
-    // 口：大きく笑った口（白い歯と、ピンクの舌）
-    const mouthShape = new THREE.Shape();
-    mouthShape.moveTo(-0.34, 0);
-    mouthShape.quadraticCurveTo(0, -0.62, 0.34, 0);
-    mouthShape.closePath();
-    const mouth = new THREE.Group();
-    mouth.position.set(0, -0.26, 0.88);
-    mouth.rotation.x = -0.28;
-    head.add(mouth);
-    mouth.add(mesh(new THREE.ShapeGeometry(mouthShape), mat(C.mouth)));
-    mouth.add(mesh(new THREE.BoxGeometry(0.5, 0.08, 0.01), mat(C.white, { roughness: 0.3 }), 0, -0.045, 0.008));
-    const tongue = mesh(new THREE.CircleGeometry(0.12, 20), mat(C.tongue), 0, -0.21, 0.006);
-    tongue.scale.set(1.2, 0.55, 1);
-    mouth.add(tongue);
-
-    return { root, body, head, armL, armR, eyes };
-  }
-
-  // 3Dのマイクを動かす。play(動きの名前) で、ジャンプ・回転・手をふる などをする
-  function start(THREE, canvas, { size, calm }) {
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.setSize(size, size, false);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-
-    const scene = new THREE.Scene();
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x3a4a63, 1.15));
-    const key = new THREE.DirectionalLight(0xffffff, 2.1);
-    key.position.set(3, 4, 6);
-    scene.add(key);
-    const rim = new THREE.DirectionalLight(0xffe2a8, 1.6);
-    rim.position.set(-4, 3, -5);
-    scene.add(rim);
-    const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
-    camera.position.set(0, 0.4, 7.6);
-    camera.lookAt(0, 0.2, 0);
-
-    const m = build(THREE);
-    scene.add(m.root);
-
-    let action = null, actionAt = 0, blinkAt = 2;
-    const look = { x: 0, y: 0, tx: 0, ty: 0 };
-    const t0 = performance.now();
-    const ease = (x) => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
-
-    function pose(t) {
-      // ふだん：ゆっくり呼吸して、少し首をふる。腕は少しゆれる
-      look.x += (look.tx - look.x) * 0.08;
-      look.y += (look.ty - look.y) * 0.08;
-      const sway = calm ? 0 : 1;
-      m.body.scale.y = 1 + 0.018 * Math.sin(t * 2.3) * sway;
-      m.head.rotation.set(look.y + 0.05 * Math.sin(t * 1.1) * sway, look.x + 0.18 * Math.sin(t * 0.7) * sway, 0.04 * Math.sin(t * 0.9) * sway);
-      // 腕の角度（0 = まっすぐ上。左腕はプラス、右腕はマイナスで外へ開く）
-      let aL = 0.55 + 0.05 * Math.sin(t * 1.7) * sway, aR = -0.55 - 0.05 * Math.sin(t * 1.9) * sway;
-      let xR = 0, spin = 0;
-      if (action) {
-        const e = t - actionAt;
-        if (action === "wave" && e < 1.4) aR = -0.25 + 0.38 * Math.sin(e * 16);
-        else if (action === "cheer" && e < 1.6) { const p = Math.abs(Math.sin(e * 11)); aL = 0.12 + 0.45 * p; aR = -(0.12 + 0.45 * p); }
-        else if (action === "throw" && e < 0.8) xR = e < 0.25 ? -1.3 * (e / 0.25) : e < 0.5 ? -1.3 + 2.5 * ((e - 0.25) / 0.25) : 1.2 * (1 - (e - 0.5) / 0.3);
-        else if (action === "spin" && e < 0.9) spin = ease(e / 0.9) * Math.PI * 2;
-        else if (action === "jump" && e < 0.9) { aL = 0.15; aR = -0.15; }
-        else if (action === "tilt" && e < 0.8) m.head.rotation.z += 0.22 * Math.sin((e / 0.8) * Math.PI * 2);
-        else action = null;
-      }
-      m.armL.rotation.z = aL;
-      m.armR.rotation.z = aR;
-      m.armR.rotation.x = xR;
-      m.root.rotation.y = spin;
-      // まばたき
-      const b = t - blinkAt;
-      const lid = b > 0 && b < 0.14 ? 0.12 : 1;
-      if (b > 0.14) blinkAt = t + 2.5 + Math.random() * 3;
-      for (const eye of m.eyes) eye.scale.y = lid;
-    }
-
-    // PC：マウスのほうを見る
-    window.addEventListener("pointermove", (ev) => {
-      const r = canvas.getBoundingClientRect();
-      const dx = ev.clientX - (r.left + r.width / 2), dy = ev.clientY - (r.top + r.height / 2);
-      look.tx = Math.max(-1, Math.min(1, dx / 600)) * 0.55;
-      look.ty = Math.max(-1, Math.min(1, dy / 600)) * 0.35;
-    }, { passive: true });
-
-    // 画面に見えているときだけ、1秒に30回描く（電池を減らさないように）
-    let last = 0;
-    function frame(now) {
-      requestAnimationFrame(frame);
-      if (now - last < 33 || document.hidden || !canvas.isConnected || canvas.closest(".hidden")) return;
-      last = now;
-      pose((now - t0) / 1000);
-      renderer.render(scene, camera);
-    }
-    pose(0);
-    renderer.render(scene, camera);
-    if (!calm) requestAnimationFrame(frame);
-
-    return {
-      play(name) {
-        action = name;
-        actionAt = (performance.now() - t0) / 1000;
-        if (calm) { pose(actionAt); renderer.render(scene, camera); }
-      },
-      // 小さいアイコン用の3Dの絵（画像）を作る
-      snapshot(px) {
-        const c = document.createElement("canvas");
-        const r = new THREE.WebGLRenderer({ canvas: c, antialias: true, alpha: true, preserveDrawingBuffer: true });
-        r.setPixelRatio(1);
-        r.setSize(px, px, false);
-        r.outputColorSpace = THREE.SRGBColorSpace;
-        const saved = { ...look };
-        look.x = look.tx = 0.22;
-        look.y = look.ty = 0.04;
-        pose(0);
-        r.render(scene, camera);
-        const url = c.toDataURL("image/png");
-        Object.assign(look, saved);
-        r.dispose();
-        r.forceContextLoss();
-        return url;
-      },
-    };
-  }
-
-  return { start };
-})();
-</script>
 <button class="totop" id="totop" aria-label="上に戻る">↑</button>
 <button class="menu-fab" id="menuFab" aria-label="メニューを開く" aria-expanded="false" aria-controls="menu">☰ メニュー</button>
 <nav class="menu" id="menu" aria-label="メニュー"></nav>
@@ -1334,15 +1092,47 @@ window.Mike3D = (() => {
 
   // ===== コーチ・マイク（オリジナルキャラクター）：テキサス出身の元アメフト選手で、今は「お金のコーチ」 =====
   // 金髪にヘッドバンド、ホイッスルを首にかけた体育会系。考え中はガッツポーズ（.talk）、ときどきまばたきする
-  let MIKE_IMG = null; // 3Dのマイクの絵（three.js を読み込めたら入る）
   function mascot(cls = "") {
-    if (MIKE_IMG) return `<img class="mascot ${cls}" src="${MIKE_IMG}" alt="" aria-hidden="true">`;
     return `<svg class="mascot ${cls}" viewBox="0 0 64 64" aria-hidden="true">
       <g class="wing-l"><path d="M14 56 L7 41" stroke="#c8102e" stroke-width="5.5" stroke-linecap="round"/><circle cx="6.5" cy="38.5" r="4.2" fill="#f2c29b"/></g>
       <g class="wing-r"><path d="M50 56 L57 41" stroke="#c8102e" stroke-width="5.5" stroke-linecap="round"/><circle cx="57.5" cy="38.5" r="4.2" fill="#f2c29b"/></g>
       <path d="M11 64 Q12 50 32 49.5 Q52 50 53 64 Z" fill="#c8102e"/>
       <path d="M26.5 49.8 L32 56.5 L37.5 49.8 Z" fill="#fff"/>
       <path d="M17 58 h7 M40 58 h7" stroke="#fff" stroke-width="1.6"/>
+      <path d="M25 49 Q32 55 39 49" stroke="#facc15" stroke-width="1.3" fill="none"/>
+      <rect x="35.5" y="51" width="6.5" height="3.6" rx="1.6" fill="#cbd5e1" stroke="#94a3b8" stroke-width=".6"/>
+      <circle cx="14.6" cy="31" r="3.4" fill="#f2c29b"/><circle cx="49.4" cy="31" r="3.4" fill="#f2c29b"/>
+      <ellipse cx="32" cy="30.5" rx="17" ry="18" fill="#f8d3b0"/>
+      <path d="M15.2 25 Q14 8 32 7 Q50 8 48.8 25 L46.5 15.5 L42.5 21 L39 12.5 L35 19.5 L31.5 11.5 L27.5 19.5 L24 13 L20.5 20.5 L18 16 Z" fill="#f6c343"/>
+      <rect x="14.6" y="19.2" width="34.8" height="5.6" rx="2.8" fill="#1d4ed8"/>
+      <path d="M32 19.9 l1.05 2.15 2.35.33-1.7 1.65.4 2.35L32 25.3l-2.1 1.13.4-2.35-1.7-1.65 2.35-.33Z" fill="#fff" transform="translate(0 -1.2) scale(1)"/>
+      <path d="M20.5 27.3 L28 25.6 M43.5 27.3 L36 25.6" stroke="#b7862b" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="25" cy="31" rx="2.5" ry="3" fill="#1d1b2f"/><ellipse cx="39" cy="31" rx="2.5" ry="3" fill="#1d1b2f"/>
+      <circle cx="25.9" cy="29.9" r=".9" fill="#fff"/><circle cx="39.9" cy="29.9" r=".9" fill="#fff"/>
+      <ellipse class="lid" cx="25" cy="31" rx="3" ry="3.5" fill="#f8d3b0"/><ellipse class="lid" cx="39" cy="31" rx="3" ry="3.5" fill="#f8d3b0"/>
+      <ellipse cx="19.8" cy="37" rx="2.6" ry="1.5" fill="#ff8fa3" opacity=".5"/><ellipse cx="44.2" cy="37" rx="2.6" ry="1.5" fill="#ff8fa3" opacity=".5"/>
+      <path d="M23.5 37.2 Q32 47.5 40.5 37.2 Z" fill="#7a1f2b"/>
+      <path d="M24.8 37.6 Q32 40.4 39.2 37.6 L38.6 39.3 Q32 41.6 25.4 39.3 Z" fill="#fff"/>
+      <path d="M28.5 43.3 Q32 45.2 35.5 43.3" stroke="#ff8fa3" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    </svg>`;
+  }
+
+  // 右下に立たせる、全身のマイク（頭と腕は上の絵と同じ。下にユニフォーム・パンツ・くつ下・スパイク）
+  function mascotFull(cls = "") {
+    return `<svg class="mascot full ${cls}" viewBox="0 3 64 107" aria-hidden="true">
+      <g class="wing-l"><path d="M14 56 L7 41" stroke="#c8102e" stroke-width="5.5" stroke-linecap="round"/><circle cx="6.5" cy="38.5" r="4.2" fill="#f2c29b"/></g>
+      <g class="wing-r"><path d="M50 56 L57 41" stroke="#c8102e" stroke-width="5.5" stroke-linecap="round"/><circle cx="57.5" cy="38.5" r="4.2" fill="#f2c29b"/></g>
+      <path d="M17 79 h30 l-1.8 18 h-10.5 l-2.7 -10 l-2.7 10 h-10.5 Z" fill="#f1ece1"/>
+      <path d="M18.6 81 l-.9 15 M45.4 81 l.9 15" stroke="#c8102e" stroke-width="1.6"/>
+      <rect x="19" y="96.5" width="9.6" height="6.5" rx="1.6" fill="#c8102e"/><rect x="35.4" y="96.5" width="9.6" height="6.5" rx="1.6" fill="#c8102e"/>
+      <path d="M19 99 h9.6 M35.4 99 h9.6" stroke="#fff" stroke-width="1.1"/>
+      <path d="M15.5 103.5 Q16 101.6 19 101.6 h9.4 q1.6 0 1.6 2 v2.4 h-14.5 Z" fill="#1d1b2f"/><path d="M48.5 103.5 Q48 101.6 45 101.6 h-9.4 q-1.6 0 -1.6 2 v2.4 h14.5 Z" fill="#1d1b2f"/>
+      <path d="M17 106 h12 M35 106 h12" stroke="#475569" stroke-width="1" stroke-dasharray="1.4 1.6"/>
+      <path d="M12 61 Q12 50 32 49.5 Q52 50 52 61 L49.5 80.5 Q32 82.5 14.5 80.5 Z" fill="#c8102e"/>
+      <ellipse cx="15.5" cy="55.5" rx="6.6" ry="5" fill="#b00d27"/><ellipse cx="48.5" cy="55.5" rx="6.6" ry="5" fill="#b00d27"/>
+      <path d="M26.5 49.8 L32 56.5 L37.5 49.8 Z" fill="#fff"/>
+      <path d="M30.2 63.2 l3.2 -2.2 v12.4 h2.6 v2.2 h-7.4 v-2.2 h2.6 v-9.2 l-1.6 1.1 Z" fill="#fff"/>
+      <rect x="15.5" y="78.6" width="33" height="3" rx="1" fill="#1d1b2f"/><rect x="30" y="78.3" width="4" height="3.6" rx=".8" fill="#d8b878"/>
       <path d="M25 49 Q32 55 39 49" stroke="#facc15" stroke-width="1.3" fill="none"/>
       <rect x="35.5" y="51" width="6.5" height="3.6" rx="1.6" fill="#cbd5e1" stroke="#94a3b8" stroke-width=".6"/>
       <circle cx="14.6" cy="31" r="3.4" fill="#f2c29b"/><circle cx="49.4" cy="31" r="3.4" fill="#f2c29b"/>
@@ -2009,7 +1799,6 @@ window.Mike3D = (() => {
     o.classList.remove(...ACTS.map((a) => `act-${a}`));
     void o.offsetWidth; // 同じ動きを続けて出せるように、いったん外してから付け直す
     o.classList.add(`act-${name}`);
-    window.mike3d?.play(name); // 3Dのマイクは、腕や体を立体的に動かす
     clearTimeout(actTimer);
     actTimer = setTimeout(() => o.classList.remove(`act-${name}`), 1700);
     if (name === "jump") setTimeout(() => burst("dust"), 650);
@@ -2731,34 +2520,8 @@ window.Mike3D = (() => {
   ["sort", "period"].forEach((id) => $(id).addEventListener("input", () => { animateNext = true; resetShown(); render(); }));
   $("q").addEventListener("input", () => { resetShown(); render(); });
   $("logo").innerHTML = mascot("bob");
-  $("fabOwl").innerHTML = mascot("bob");
+  $("fabOwl").innerHTML = mascotFull("bob");
   $("chatAv").innerHTML = mascot();
-
-  // ===== コーチ・マイクを3Dにする（three.js を読み込めたら差しかえる。読めないときは今の絵のまま） =====
-  function load3D() {
-    if (!window.WebGLRenderingContext) return;
-    const sc = document.createElement("script");
-    sc.src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js";
-    sc.integrity = "sha512-vnmn/Qqn6aG0POAc9mIGzjq0IybrvxJXYDafNvp9JSnDGxeF3pbkSqLvf+YGd5ku63pT7sa/jxHn7/d0mU8+tA=="; // 中身が書きかえられていたら読み込まない
-    sc.crossOrigin = "anonymous";
-    sc.onload = () => {
-      try {
-        const canvas = document.createElement("canvas");
-        canvas.className = "mike3d";
-        window.mike3d = Mike3D.start(THREE, canvas, { size: 68, calm });
-        MIKE_IMG = window.mike3d.snapshot(256);
-        $("fabOwl").replaceChildren(canvas);
-        $("fabOwl").classList.add("is3d");
-        // すでに出ている小さいマイク（ロゴ・チャットなど）も、3Dの絵に差しかえる
-        document.querySelectorAll("svg.mascot").forEach((svg) => { svg.outerHTML = mascot(svg.getAttribute("class").replace("mascot", "").trim()); });
-      } catch (err) {
-        console.warn("3Dのマイクを出せませんでした", err);
-      }
-    };
-    document.head.appendChild(sc);
-  }
-  if (document.readyState === "complete") setTimeout(load3D, 300);
-  else window.addEventListener("load", () => setTimeout(load3D, 300));
   // 今日の日付と「上に戻る」ボタン
   $("today").textContent = new Date().toLocaleDateString("ja-JP", { month: "long", day: "numeric", weekday: "short" }) + "のニュース";
   window.addEventListener("scroll", () => $("totop").classList.toggle("show", window.scrollY > 600), { passive: true });
